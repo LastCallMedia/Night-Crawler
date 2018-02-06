@@ -1,6 +1,6 @@
 {
   "name": "lastcall-nightcrawler",
-  "version": "1.0.0-alpha2",
+  "version": "1.0.0-alpha3",
   "main": "dist/index.js",
   "license": "MIT",
   "dependencies": {
@@ -37,11 +37,14 @@
   ],
   "babel": {
     "presets": [
-      ["env", {
-        "targets": {
-          "node": "6.10"
+      [
+        "env",
+        {
+          "targets": {
+            "node": "6.10"
+          }
         }
-      }]
+      ]
     ]
   },
   "eslintConfig": {
