@@ -1,6 +1,6 @@
 {
-  "name": "nightcrawler",
-  "version": "1.0.0",
+  "name": "lastcall-nightcrawler",
+  "version": "1.0.0-alpha1",
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
@@ -31,6 +31,9 @@
     "prettier": "prettier --single-quote --write '{src,test}/**/*.{js,jsx}' '*.js'",
     "test": "jest"
   },
+  "files": [
+    "dist/*"
+  ],
   "babel": {
     "presets": [
       "env"
