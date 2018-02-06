@@ -20,7 +20,10 @@
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "chai": "^4.1.2",
+    "eslint": "^4.17.0",
+    "eslint-config-prettier": "^2.9.0",
     "jest": "^22.1.4",
+    "jest-junit": "^3.5.0",
     "nock": "^9.1.6",
     "prettier": "^1.10.2"
   },
@@ -32,6 +35,14 @@
     "presets": [
       "env"
     ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "prettier"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2017
+    }
   },
   "jest": {
     "testRegex": "(/test/.*|(\\.|/)(test|spec))\\.jsx?$"

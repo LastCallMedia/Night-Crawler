@@ -1,1 +1,1 @@
-return require('./src/crawler');
+module.exports = require('./src/crawler');
