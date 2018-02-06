@@ -3,7 +3,7 @@ const yargs = require('yargs');
 const path = require('path');
 const fs = require('fs');
 require('console.table');
-const Report = require('../src/report');
+const Report = require('./report');
 
 function loadCrawler(filename) {
     return require(path.resolve(process.cwd(), filename));
