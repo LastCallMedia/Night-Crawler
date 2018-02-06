@@ -7,5 +7,13 @@ jobs:
     steps:
       - checkout
       - run: npm install
-      - run: node_modules/.bin/eslint --format junit -o /tmp/junit/eslint.xml
-      - run: node_modules/.bin/jest --ci --testResultsProcessor="jest-junit"
+      - run:
+          name: "ESLint"
+          command: node_modules/.bin/eslint --format junit -o /tmp/junit/eslint.xml
+      - run:
+          name: "Jest"
+          command: node_modules/.bin/jest --ci --testResultsProcessor="jest-junit"
+          environment:
+            JEST_JUNIT_OUTPUT: "/tmp/junit/jest.xml"
+      - store_test_results:
+          path: /tmp/junit
