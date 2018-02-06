@@ -1,6 +1,6 @@
 {
   "name": "lastcall-nightcrawler",
-  "version": "1.0.0-alpha3",
+  "version": "1.0.0-alpha4",
   "main": "dist/index.js",
   "license": "MIT",
   "dependencies": {
@@ -33,7 +33,8 @@
     "build": "babel src/ --out-dir=dist"
   },
   "files": [
-    "dist/*"
+    "dist/*",
+    "bin/*"
   ],
   "babel": {
     "presets": [
