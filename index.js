@@ -1,2 +1,1 @@
-
 return require('./src/crawler');
