@@ -1,6 +1,6 @@
 {
   "name": "lastcall-nightcrawler",
-  "version": "1.0.0-alpha1",
+  "version": "1.0.0-alpha2",
   "main": "dist/index.js",
   "license": "MIT",
   "dependencies": {
@@ -14,7 +14,7 @@
     "yargs": "^11.0.0"
   },
   "bin": {
-    "nightcrawler": "dist/cli.js"
+    "nightcrawler": "bin/nightcrawler"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
