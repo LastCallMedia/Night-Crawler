@@ -1,5 +1,5 @@
 class CrawlReport {
-  constructor(crawlResponses = []) {
+  constructor(crawlResponses) {
     this.crawlResponses = crawlResponses;
   }
 
