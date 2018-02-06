@@ -1,7 +1,7 @@
 {
   "name": "lastcall-nightcrawler",
   "version": "1.0.0-alpha1",
-  "main": "index.js",
+  "main": "dist/index.js",
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.5.1",
