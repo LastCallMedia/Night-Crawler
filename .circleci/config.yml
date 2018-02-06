@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  test:
+    working_directory: /srv
+    docker:
+      - image: node:8
+    steps:
+      - checkout
+      - run: npm install
+      - run: node_modules/.bin/prettier
+      - run: node_modules/.bin/jest
