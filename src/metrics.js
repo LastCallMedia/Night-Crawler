@@ -1,15 +1,16 @@
 function averageTime(collection) {
-  return (
-    collection.reduce((sum, i) => sum + i.data.time, 0) / collection.length
-  );
+  let timed = collection.filter(i => i.hasOwnProperty('backendTime'));
+
+  if (timed.length) {
+    return timed.reduce((s, i) => s + i.backendTime, 0) / timed.length;
+  }
+  return 0;
 }
 averageTime.displayName = 'Average Backend Time';
 
 function percentSuccess(collection) {
   return (
-    collection.filter(i => i.data.status <= 500).length /
-    collection.length *
-    100
+    collection.filter(i => i.error === false).length / collection.length * 100
   );
 }
 percentSuccess.displayName = '% Successful';

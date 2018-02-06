@@ -11,10 +11,13 @@ class Crawler extends EventEmitter {
    */
   constructor(config) {
     super();
-    config = Object.assign({}, config, {
-      metrics: [],
-      assertions: []
-    });
+    config = Object.assign(
+      {
+        metrics: [],
+        assertions: []
+      },
+      config
+    );
     this.queue = [];
     this.metrics = config.metrics;
     this.assertions = config.assertions;

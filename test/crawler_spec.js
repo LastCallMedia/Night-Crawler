@@ -31,6 +31,18 @@ describe('Crawler', () => {
     });
   });
 
+  it('Should accept custom metrics', function() {
+    var m = function() {};
+    var c = new Crawler({ metrics: [m] });
+    expect(c.getMetrics()).toEqual([m]);
+  });
+
+  it('Should accept custom assertions', function() {
+    var a = function() {};
+    var c = new Crawler({ assertions: [a] });
+    expect(c.getAssertions()).toEqual([a]);
+  });
+
   describe('Crawling', function() {
     it('Should should invoke success callback with the appropriate arguments', function() {
       nock('http://example.com')
