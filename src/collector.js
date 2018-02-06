@@ -1,16 +1,12 @@
-function status(response) {
-  return {
-    status: response.statusCode
-  };
+function statusCode(response, data) {
+  data.statusCode = response.statusCode;
 }
 
-function time(response) {
-  return {
-    time: response.timingPhases.firstByte
-  };
+function backendResponseTime(response, data) {
+  data.backendTime = response.timingPhases.firstByte;
 }
 
 module.exports = {
-  status,
-  time
+  statusCode,
+  backendResponseTime
 };

@@ -11,10 +11,13 @@ class Crawler extends EventEmitter {
    */
   constructor(config) {
     super();
+    config = Object.assign({}, config, {
+      metrics: [],
+      assertions: []
+    });
     this.queue = [];
-    this.collectors = config.collectors ? config.collectors : [];
-    this.metrics = config.metrics ? config.metrics : [];
-    this.assertions = config.assertions ? config.assertions : [];
+    this.metrics = config.metrics;
+    this.assertions = config.assertions;
   }
 
   /**
@@ -49,7 +52,8 @@ class Crawler extends EventEmitter {
    * @param crawlRequest
    */
   enqueue(crawlRequest) {
-    this.queue.push(crawlRequest);
+    this.queue.push(normalizeRequest(crawlRequest));
+    return this;
   }
 
   /**
@@ -93,14 +97,13 @@ class Crawler extends EventEmitter {
    * @param response
    * @returns {{url: (*|(()=>string)|string), groups: (*|Array), error: boolean, data: *}}
    */
-  collectSuccess(crawlRequest, response) {
+  async collectSuccess(crawlRequest, response) {
     log(`Success on ${crawlRequest.url}`);
-    return {
-      url: crawlRequest.url,
-      groups: crawlRequest.groups,
-      error: false,
-      data: this.collectResponseData(response)
-    };
+    let collected = Object.assign({}, crawlRequest, {
+      error: false
+    });
+    await this.emit('response', response, collected);
+    return collected;
   }
 
   /**
@@ -110,29 +113,15 @@ class Crawler extends EventEmitter {
    * @param err
    * @returns {{url: (*|(()=>string)|string), groups: (*|Array), error: boolean, data: {}}}
    */
-  collectError(crawlRequest, err) {
+  async collectError(crawlRequest, err) {
     error(`Error on ${crawlRequest.url}`);
-    return {
-      url: crawlRequest.url,
-      groups: crawlRequest.groups,
-      error: true,
-      data: err.response ? this.collectResponseData(err.response) : {}
-    };
-  }
-
-  /**
-   * Invoke all collectors on the response object.
-   *
-   * @param response
-   * @returns {*}
-   */
-  collectResponseData(response) {
-    // Invoke all collectors with response, merging the returned object from
-    // each collector into a single POJO.
-    return this.collectors.reduce(
-      (data, collector) => Object.assign({}, data, collector(response)),
-      {}
-    );
+    let collected = Object.assign({}, crawlRequest, {
+      error: true
+    });
+    if (err.response) {
+      await this.emit('response', err.response, collected);
+    }
+    return collected;
   }
 
   getMetrics() {
@@ -142,6 +131,24 @@ class Crawler extends EventEmitter {
   getAssertions() {
     return this.assertions;
   }
+}
+
+function normalizeRequest(request) {
+  var normalized;
+  if (typeof request === 'string') {
+    normalized = {
+      url: request,
+      groups: []
+    };
+  } else if (request !== null && typeof request === 'object') {
+    normalized = Object.assign({ url: null, groups: [] }, request);
+  } else {
+    throw new Error('Unexpected value for request: ' + request.toString());
+  }
+  if (typeof normalized.url !== 'string' || normalized.url.length < 1) {
+    throw new Error('Invalid URL given');
+  }
+  return normalized;
 }
 
 module.exports = Crawler;

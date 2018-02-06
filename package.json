@@ -17,9 +17,23 @@
   },
   "bin": "./bin/nightcrawler",
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "chai": "^4.1.2",
+    "jest": "^22.1.4",
+    "nock": "^9.1.6",
     "prettier": "^1.10.2"
   },
   "scripts": {
-    "prettier": "prettier --single-quote --write 'src/**/*.{js,jsx}' '*.js'"
+    "prettier": "prettier --single-quote --write '{src,test}/**/*.{js,jsx}' '*.js'",
+    "test": "jest"
+  },
+  "babel": {
+    "presets": [
+      "env"
+    ]
+  },
+  "jest": {
+    "testRegex": "(/test/.*|(\\.|/)(test|spec))\\.jsx?$"
   }
 }
