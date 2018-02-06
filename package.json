@@ -29,14 +29,19 @@
   },
   "scripts": {
     "prettier": "prettier --single-quote --write '{src,test}/**/*.{js,jsx}' '*.js'",
-    "test": "jest"
+    "test": "jest",
+    "build": "babel src/ --out-dir=dist"
   },
   "files": [
     "dist/*"
   ],
   "babel": {
     "presets": [
-      "env"
+      ["env", {
+        "targets": {
+          "node": "6.10"
+        }
+      }]
     ]
   },
   "eslintConfig": {
