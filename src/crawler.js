@@ -14,7 +14,7 @@ class Crawler extends EventEmitter {
     super();
     this.queue = [];
     this.on('response', collectors.statusCode);
-    this.on('response', collectors.backendResponseTime);
+    this.on('response', collectors.backendTime);
   }
 
   /**
