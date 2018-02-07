@@ -3,24 +3,18 @@ const request = require('request-promise');
 const EventEmitter = require('events-async');
 const log = require('debug')('nightcrawler:info');
 const error = require('debug')('nightcrawler:error');
+const collectors = require('./collector');
 
 class Crawler extends EventEmitter {
   /**
    *
    * @param config
    */
-  constructor(config) {
+  constructor() {
     super();
-    config = Object.assign(
-      {
-        metrics: [],
-        assertions: []
-      },
-      config
-    );
     this.queue = [];
-    this.metrics = config.metrics;
-    this.assertions = config.assertions;
+    this.on('response', collectors.statusCode);
+    this.on('response', collectors.backendResponseTime);
   }
 
   /**
@@ -127,31 +121,22 @@ class Crawler extends EventEmitter {
     return collected;
   }
 
-  getMetrics() {
-    return this.metrics;
-  }
-
-  getAssertions() {
-    return this.assertions;
+  async analyze(data) {
+    await this.emit('analyze', data);
   }
 }
 
 function normalizeRequest(request) {
-  var normalized;
   if (typeof request === 'string') {
-    normalized = {
-      url: request,
-      groups: []
+    request = {
+      url: request
     };
-  } else if (request !== null && typeof request === 'object') {
-    normalized = Object.assign({ url: null, groups: [] }, request);
-  } else {
-    throw new Error('Unexpected value for request: ' + request.toString());
   }
-  if (typeof normalized.url !== 'string' || normalized.url.length < 1) {
-    throw new Error('Invalid URL given');
+  if (typeof request.url !== 'string') {
+    console.log(request);
+    throw new Error('The request URL must be a string.');
   }
-  return normalized;
+  return request;
 }
 
 module.exports = Crawler;

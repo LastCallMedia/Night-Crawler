@@ -18,29 +18,28 @@ describe('Crawler', () => {
       });
   });
 
-  it('Should normalize requests that are added to the queue', function() {
-    var tests = ['foo', { url: 'foo' }, { url: 'foo', groups: [] }];
-    tests.forEach(function(t) {
-      var c = new Crawler().enqueue(t);
+  describe('Enqueue', function() {
+    it('Should normalize requests that are added to the queue', function() {
+      var tests = ['foo', { url: 'foo' }];
+      tests.forEach(function(t) {
+        var c = new Crawler().enqueue(t);
+        expect(c.queue).toEqual([
+          {
+            url: 'foo'
+          }
+        ]);
+      });
+    });
+
+    it('Should accept additional data that is enqueued', function() {
+      var c = new Crawler().enqueue({ url: 'foo', foo: 'bar' });
       expect(c.queue).toEqual([
         {
           url: 'foo',
-          groups: []
+          foo: 'bar'
         }
       ]);
     });
-  });
-
-  it('Should accept custom metrics', function() {
-    var m = function() {};
-    var c = new Crawler({ metrics: [m] });
-    expect(c.getMetrics()).toEqual([m]);
-  });
-
-  it('Should accept custom assertions', function() {
-    var a = function() {};
-    var c = new Crawler({ assertions: [a] });
-    expect(c.getAssertions()).toEqual([a]);
   });
 
   describe('Crawling', function() {
@@ -88,17 +87,27 @@ describe('Crawler', () => {
         .crawl()
         .then(data => {
           expect(data.length).toEqual(2);
-          expect(data[0]).toEqual({
-            url: 'http://example.com/fail',
-            error: true,
-            groups: []
-          });
-          expect(data[1]).toEqual({
-            url: 'http://example.com/success',
-            error: false,
-            groups: []
-          });
+          expect(data[0].url).toEqual('http://example.com/fail');
+          expect(data[1].url).toEqual('http://example.com/success');
+          expect(data[0].error).toEqual(true);
+          expect(data[1].error).toEqual(false);
+          expect(typeof data[0].statusCode).toEqual('number');
+          expect(typeof data[1].statusCode).toEqual('number');
+          expect(typeof data[0].backendTime).toEqual('number');
+          expect(typeof data[1].backendTime).toEqual('number');
         });
+    });
+
+    it('Should pass additional data that was queued', function() {
+      nock('http://example.com')
+        .get('/success')
+        .reply(200);
+      return new Crawler()
+        .on('setup', c =>
+          c.enqueue({ url: 'http://example.com/success', foo: 'bar' })
+        )
+        .crawl()
+        .then(data => expect(data[0].foo).toEqual('bar'));
     });
 
     it('Should collect data added through the response event', function() {
@@ -112,6 +121,18 @@ describe('Crawler', () => {
         })
         .crawl()
         .then(data => expect(data[0].touched).toEqual(1));
+    });
+  });
+
+  describe('Analyze', function() {
+    var d = [{ url: 'foo' }];
+
+    var cb = jest.fn();
+    var c = new Crawler();
+    c.on('analyze', cb);
+
+    return c.analyze(d).then(function() {
+      expect(cb.mock.calls).toEqual([[d]]);
     });
   });
 });
