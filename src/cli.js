@@ -1,6 +1,7 @@
 const yargs = require('yargs');
 const path = require('path');
 const fs = require('fs');
+var ProgressBar = require('ascii-progress');
 
 function requireCrawler(file) {
   return require(path.resolve(process.cwd(), file));
@@ -15,6 +16,29 @@ function loadReport(filename) {
   return JSON.parse(fs.readFileSync(filename));
 }
 
+class ConsoleOutput {
+  start() {
+    this.progress = new ProgressBar({ total: 1 });
+  }
+  tick(total) {
+    this.progress.total = total;
+    this.progress.tick();
+  }
+  completed() {
+    let elapsed = 0;
+    if (!isNaN(this.progress.start)) {
+      elapsed = Math.round((new Date() - this.progress.start) / 1000);
+    }
+    console.log(`Crawled ${this.progress.total} urls in ${elapsed}s`);
+  }
+}
+
+class SilentOutput {
+  start() {}
+  tick() {}
+  completed() {}
+}
+
 yargs
   .option('filename', {
     alias: 'f',
@@ -27,17 +51,29 @@ yargs
     builder: yargs => {
       yargs.option('output', {
         alias: 'o',
-        describe: 'path to write output data to'
+        describe: 'path to write output data to',
+        type: 'string'
+      });
+      yargs.option('a', {
+        alias: 'skip-analysis',
+        describe: 'skip analyzing data',
+        type: 'boolean'
+      });
+      yargs.option('s', {
+        alias: 'silent',
+        describe: 'do not show progress during crawling'
       });
     },
     handler: async function(argv) {
-      console.log('Running crawler... this may take a while.');
+      var output = argv.s ? new SilentOutput() : new ConsoleOutput();
+      output.start();
       var crawler = requireCrawler(argv.filename);
+      crawler.on('response', () => output.tick(crawler.queue.length));
       var report = await crawler.crawl();
       crawler.close();
-      console.log('Crawling complete');
+      output.completed();
       writeReport(argv.output, report);
-      if (argv.analyze) {
+      if (!argv.a) {
         crawler.analyze(report);
       }
     }
