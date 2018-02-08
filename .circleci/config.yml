@@ -32,8 +32,7 @@ jobs:
       - attach_workspace:
           at: /srv
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-      - run: echo $CIRCLE_TAG
-#      - run: npm publish --tag $CIRCLE_TAG
+      - run: npm publish --tag $CIRCLE_TAG
 
 workflows:
   version: 2
@@ -50,3 +49,4 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
+          context: org-global
