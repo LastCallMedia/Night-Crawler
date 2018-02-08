@@ -29,21 +29,20 @@ jobs:
       - image: node:8
     steps:
       - checkout
-      - attach_workspace:
-          at: /srv
+      - run: npm install
+      - run: npm build
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-      - run: npm publish --tag $CIRCLE_TAG
+      - run: npm version --no-git-tag-version $CIRCLE_TAG
+      - run: npm publish
 
 workflows:
   version: 2
-  test_and_publish:
+  test:
     jobs:
-      - test:
-          filters:
-            tags:
-              only: /.*/
+      - test
+  publish:
+    jobs:
       - publish:
-          requires: [test]
           filters:
             tags:
               only: /.*/
