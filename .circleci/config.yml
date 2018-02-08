@@ -40,6 +40,9 @@ workflows:
   test_and_publish:
     jobs:
       - test
+          filters:
+            tags:
+              only: /.*/
       - publish:
           requires: [test]
           filters:
