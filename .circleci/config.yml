@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  test:
     working_directory: /srv
     docker:
       - image: node:8
@@ -17,3 +17,25 @@ jobs:
             JEST_JUNIT_OUTPUT: "/tmp/junit/jest.xml"
       - store_test_results:
           path: /tmp/junit
+
+  publish:
+    working_directory: /srv
+    docker:
+      - image: node:8
+    steps:
+      - checkout
+      - run: npm run build
+      - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+      - run: echo $CIRCLE_TAG
+#      - run: npm publish --tag $CIRCLE_TAG
+
+workflows:
+  version: 2
+  test_and_publish:
+    jobs:
+      - test
+      - publish:
+          requires: [test]
+          filters:
+            tags:
+              only: /.*/
