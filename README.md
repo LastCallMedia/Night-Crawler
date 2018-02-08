@@ -25,17 +25,7 @@ myCrawler.on('setup', function(crawler) {
 myCrawler.on('analyze', function(data) {
     // On analysis, derive the metrics you need from the
     // array of collected data.
-    var count = data.length;
-    var avgTime = data.reduce(function(sum, dataPoint) {
-        return sum + dataPoint.backendTime
-    }, 0) / data.length;
-    var failRatio = data.filter(function(dataPoint) {
-        return dataPoint.fail === true;
-    }).length / data.length;
-    
-    console.log('Crawled: ' + count);
-    console.log('Average response: ' + Math.round(avgTime) + 'ms');
-    console.log('Percent failed: ' + (Math.round(failRatio) * 100) + '%');
+    console.log("Crawled " + data.length + " pages");
 });
 
 module.exports = myCrawler;
@@ -44,6 +34,30 @@ Run your crawler:
 ```bash
 # Run the crawler and save the collected data to a file.
 node_modules/.bin/nightcrawler run -o report.json
+```
+
+Queueing Requests
+-----------------
+Requests can be queued during the `setup` event.  You can queue a new request by calling the `enqueue()` method, using either a string (representing the URL) or an object containing a `url` property.  If you pass an object, you will have access to that object's properties later on during analysis.
+
+```js
+myCrawler.on('setup', function(crawler) {
+   // This works
+   crawler.enqueue('http://localhost/'); 
+   // So does this:
+   crawler.enqueue({
+     url: 'http://localhost/foo',
+     group: 'awesome'
+   }); 
+});
+
+myCrawler.on('analyze', function(data) {
+    var awesomeRequests = data.filter(function(dataPoint) {
+        // *group property is only available if you added it during queuing.
+        return dataPoint.group === 'awesome';
+    });
+    // Do additional analysis only on pages in the awesome group.
+})
 ```
 
 Collecting data
@@ -77,4 +91,30 @@ myCrawler.on('setup', function(crawler) {
         })
     })
 })
+```
+
+Analysis
+--------
+Once the crawl has been completed, you will probably want to analyze the data in some way.  Data analysis in Nightcrawler is intentionally loose - the crawler fires an `analyze` event with an array of collected data, and you are responsible for analyzing your own data.  Here are some examples of things you might do during analysis:
+ 
+ ```js
+myCrawler.on('analyze', function(data) {
+    // Calculate the average response time:
+    var avgTime = data.reduce(function(sum, dataPoint) {
+        return sum + dataPoint.backendTime
+    }, 0) / data.length;
+    console.log('Average response time: ' + Math.round(avgTime) + 'ms');
+    
+    // Calculate the percent of requests that were marked failed:
+    var failRatio = data.filter(function(dataPoint) {
+        return dataPoint.fail === true;
+    }).length / data.length;
+    console.log('Percent failed: ' + (Math.round(failRatio) * 100) + '%');
+    
+    // Calculate the percent of requests that resulted in a 500 response.
+    var serverErrorRatio = data.filter(function(dataPoint) {
+        return dataPoint.statusCode >= 500;
+    }).length / data.length;
+    console.log('Percent resulting in 5xx: ' + serverErrorRatio);
+});
 ```
