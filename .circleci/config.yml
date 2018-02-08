@@ -15,8 +15,13 @@ jobs:
           command: node_modules/.bin/jest --ci --testResultsProcessor="jest-junit"
           environment:
             JEST_JUNIT_OUTPUT: "/tmp/junit/jest.xml"
+      - run: npm run build
       - store_test_results:
           path: /tmp/junit
+      - persist_to_workspace:
+          root: /srv
+          paths:
+            - dist
 
   publish:
     working_directory: /srv
@@ -24,8 +29,8 @@ jobs:
       - image: node:8
     steps:
       - checkout
-      - run: npm install
-      - run: npm run build
+      - attach_workspace:
+          at: /srv
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
       - run: echo $CIRCLE_TAG
 #      - run: npm publish --tag $CIRCLE_TAG
@@ -40,3 +45,5 @@ workflows:
           filters:
             tags:
               only: /.*/
+            branches:
+              ignore: /.*/
