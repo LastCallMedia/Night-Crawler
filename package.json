@@ -6,11 +6,14 @@
   "dependencies": {
     "ascii-progress": "^1.0.5",
     "bluebird": "^3.5.1",
+    "chalk": "^2.3.0",
     "debug": "^3.1.0",
     "events-async": "^1.1.0",
     "forever-agent": "^0.6.1",
+    "junit-report-builder": "^1.2.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
+    "tty-table": "^2.5.5",
     "yargs": "^11.0.0"
   },
   "bin": {

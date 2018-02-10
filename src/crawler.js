@@ -4,6 +4,7 @@ const EventEmitter = require('events-async');
 const log = require('debug')('nightcrawler:info');
 const error = require('debug')('nightcrawler:error');
 const collectors = require('./collector');
+const Report = require('./report').Report;
 
 class Crawler extends EventEmitter {
   /**
@@ -22,12 +23,13 @@ class Crawler extends EventEmitter {
    *
    * @returns {Promise.<Bluebird.<U[]>>}
    */
-  async crawl() {
+  async crawl(concurrency) {
+    concurrency = concurrency || 3;
     // Always reset the queue before beginning.
     this.queue = [];
     await this.setup();
     log(`Beginning crawl of ${this.queue.length} urls`);
-    return await this.work();
+    return await this.work(concurrency);
   }
 
   /**
@@ -58,13 +60,13 @@ class Crawler extends EventEmitter {
    *
    * @returns {Promise<Bluebird<U[]>>}
    */
-  async work() {
+  async work(concurrency) {
     return Promise.map(
       this.queue,
       cr => {
         return this.fetch(cr);
       },
-      { concurrency: 3 }
+      { concurrency }
     );
   }
 
@@ -122,7 +124,9 @@ class Crawler extends EventEmitter {
   }
 
   async analyze(data) {
-    await this.emit('analyze', data);
+    var report = new Report();
+    await this.emit('analyze', data, report);
+    return report;
   }
 }
 
@@ -133,7 +137,6 @@ function normalizeRequest(request) {
     };
   }
   if (typeof request.url !== 'string') {
-    console.log(request);
     throw new Error('The request URL must be a string.');
   }
   return request;

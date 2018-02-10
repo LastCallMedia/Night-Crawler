@@ -1,4 +1,6 @@
 var Crawler = require('../src/crawler');
+var Report = require('../src/report').Report;
+
 var nock = require('nock');
 
 describe('Crawler', () => {
@@ -125,14 +127,18 @@ describe('Crawler', () => {
   });
 
   describe('Analyze', function() {
-    var d = [{ url: 'foo' }];
+    it('Should invoke analyze event', function() {
+      var cb = jest.fn();
+      var c = new Crawler();
+      c.on('analyze', cb);
+      return c.analyze([]);
+    });
 
-    var cb = jest.fn();
-    var c = new Crawler();
-    c.on('analyze', cb);
-
-    return c.analyze(d).then(function() {
-      expect(cb.mock.calls).toEqual([[d]]);
+    it('Should return a report from analyze', function() {
+      var c = new Crawler();
+      return c.analyze([]).then(report => {
+        expect(report).toBeInstanceOf(Report);
+      });
     });
   });
 });
