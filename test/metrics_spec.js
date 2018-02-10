@@ -64,7 +64,7 @@ describe('Metrics', function() {
     });
     it('Should format the value', function() {
       var m = new metrics.AverageNumber('', [1, 3]);
-      expect(m.toString()).toEqual('2ms');
+      expect(m.toString()).toEqual('2');
     });
     it('Should report an error if the errorCheck callback returns true', function() {
       var cb = jest.fn(() => true);

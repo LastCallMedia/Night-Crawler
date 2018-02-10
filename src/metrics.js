@@ -37,8 +37,14 @@ class AverageNumber extends Metric {
       : 0;
   }
   toString() {
-    return `${Math.round(this)}ms`;
+    return `${Math.round(this)}`;
   }
+}
+
+class AverageMilliseconds extends AverageNumber {
+    toString() {
+        return `${Math.round(this)}ms`;
+    }
 }
 
 class PercentTrue extends Metric {
@@ -59,5 +65,6 @@ class PercentTrue extends Metric {
 module.exports = {
   Metric,
   AverageNumber,
+  AverageMilliseconds,
   PercentTrue
 };
