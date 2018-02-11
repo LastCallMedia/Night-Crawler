@@ -29,7 +29,11 @@ class Crawler extends EventEmitter {
     this.queue = [];
     await this.setup();
     log(`Beginning crawl of ${this.queue.length} urls`);
-    return await this.work(concurrency);
+
+    return {
+      date: new Date(),
+      data: await this.work(concurrency)
+    };
   }
 
   /**
@@ -123,9 +127,9 @@ class Crawler extends EventEmitter {
     return collected;
   }
 
-  async analyze(data) {
-    var report = new Report();
-    await this.emit('analyze', data, report);
+  async analyze(crawlReport) {
+    var report = new Report(crawlReport.date);
+    await this.emit('analyze', crawlReport, report);
     return report;
   }
 }

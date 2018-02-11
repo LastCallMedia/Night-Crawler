@@ -102,7 +102,8 @@ class ConsoleComparisonFormatter extends ComparisonFormatter {
 }
 
 class Report {
-  constructor() {
+  constructor(label) {
+    this.label = label;
     this.metrics = [];
   }
   add(key, metric) {
