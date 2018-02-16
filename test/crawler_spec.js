@@ -1,11 +1,15 @@
-var Crawler = require('../src/crawler');
-var Report = require('../src/report').Report;
+import Crawler from '../src/crawler';
+import { Report } from '../src/report';
 
 var nock = require('nock');
 
 describe('Crawler', () => {
-  it('Should return an array of results from crawling', function() {
-    return new Crawler().crawl().then(res => expect(res).toEqual([]));
+  it('Should return an object containing the results of the crawl', function() {
+    return new Crawler().crawl().then(report => {
+      expect(report).toBeInstanceOf(Object);
+      expect(report.date).toBeInstanceOf(Date);
+      expect(report.data).toEqual([]);
+    });
   });
 
   it('Should invoke the setup event at the start of crawling', function() {
@@ -87,7 +91,7 @@ describe('Crawler', () => {
           c.enqueue('http://example.com/success');
         })
         .crawl()
-        .then(data => {
+        .then(({ data }) => {
           expect(data.length).toEqual(2);
           expect(data[0].url).toEqual('http://example.com/fail');
           expect(data[1].url).toEqual('http://example.com/success');
@@ -109,7 +113,7 @@ describe('Crawler', () => {
           c.enqueue({ url: 'http://example.com/success', foo: 'bar' })
         )
         .crawl()
-        .then(data => expect(data[0].foo).toEqual('bar'));
+        .then(({ data }) => expect(data[0].foo).toEqual('bar'));
     });
 
     it('Should collect data added through the response event', function() {
@@ -122,7 +126,7 @@ describe('Crawler', () => {
           data.touched = 1;
         })
         .crawl()
-        .then(data => expect(data[0].touched).toEqual(1));
+        .then(({ data }) => expect(data[0].touched).toEqual(1));
     });
   });
 

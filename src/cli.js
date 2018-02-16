@@ -1,12 +1,24 @@
+// @flow
+
 const yargs = require('yargs');
 const path = require('path');
 const fs = require('fs');
 var ProgressBar = require('ascii-progress');
-const formatters = require('./report');
+import {
+  JunitFormatter,
+  ConsoleFormatter,
+  ConsoleComparisonFormatter
+} from './formatters';
 
-function requireCrawler(file) {
-  return require(path.resolve(process.cwd(), file));
+import type { Formatter, ComparisonFormatter } from './formatters';
+import type Crawler from './crawler';
+
+function requireCrawler(file): Crawler {
+  var resolved = path.resolve(process.cwd(), file);
+  // $FlowFixMe
+  return require(resolved);
 }
+
 function writeReport(filename, report) {
   if (filename) {
     fs.writeFileSync(filename, JSON.stringify(report), 'utf8');
@@ -17,11 +29,43 @@ function loadReport(filename) {
   return JSON.parse(fs.readFileSync(filename));
 }
 
-class ConsoleOutput {
+function formatterFactory(type): Formatter {
+  switch (type) {
+    case 'junit':
+      return new JunitFormatter();
+    case 'console':
+      return new ConsoleFormatter();
+    default:
+      throw new Error(`Invalid output format: ${type}`);
+  }
+}
+
+function comparisonFormatterFactory(type): ComparisonFormatter {
+  switch (type) {
+    case 'console':
+      return new ConsoleComparisonFormatter();
+    default:
+      throw new Error(`Invalid output format: ${type}`);
+  }
+}
+
+interface Output {
+  start(): void;
+  tick(total: number): void;
+  completed(): void;
+  log(...args: any): void;
+}
+
+class ConsoleOutput implements Output {
+  progress: {
+    total: number,
+    tick: () => {},
+    start: number
+  };
   start() {
     this.progress = new ProgressBar({ total: 1 });
   }
-  tick(total) {
+  tick(total: number) {
     this.progress.total = total;
     this.progress.tick();
   }
@@ -37,11 +81,11 @@ class ConsoleOutput {
   }
 }
 
-class SilentOutput {
+class SilentOutput implements Output {
   start() {}
-  tick() {}
+  tick(total: number) {}
   completed() {}
-  log() {}
+  log(...args: any) {}
 }
 
 yargs
@@ -80,12 +124,12 @@ yargs
       var crawler = requireCrawler(argv.filename);
       crawler.on('response', () => output.tick(crawler.queue.length));
       var data = await crawler.crawl(argv.concurrency);
-      crawler.close();
       output.completed();
       writeReport(argv.output, data);
       if (!argv.a) {
         var analysis = await crawler.analyze(data);
-        output.log(new formatters.ConsoleFormatter(analysis).report());
+        var formatter = formatterFactory('console');
+        output.log(formatter.format(analysis));
       }
     }
   })
@@ -104,19 +148,9 @@ yargs
     handler: async function(argv) {
       var crawler = requireCrawler(argv.filename);
       var dataPoints = loadReport(argv.inputfile);
-      var report = await crawler.analyze(dataPoints, report);
-      var reporter;
-      switch (argv.format) {
-        case 'console':
-          reporter = new formatters.ConsoleFormatter(report);
-          break;
-        case 'junit':
-          reporter = new formatters.JunitFormatter(report);
-          break;
-        default:
-          throw new Error(`Invalid output format: ${arg.format}`);
-      }
-      console.log(reporter.report());
+      var report = await crawler.analyze(dataPoints);
+      var formatter = formatterFactory(argv.format);
+      console.log(formatter.format(report));
     }
   })
   .command({
@@ -133,13 +167,8 @@ yargs
       var crawler = requireCrawler(argv.filename);
       var report1 = await crawler.analyze(loadReport(argv.inputfile1));
       var report2 = await crawler.analyze(loadReport(argv.inputfile2));
-
-      var reporter = new formatters.ConsoleComparisonFormatter([
-        report1,
-        report2
-      ]);
-
-      console.log(reporter.report());
+      var formatter = comparisonFormatterFactory('console');
+      console.log(formatter.format([report1, report2]));
     }
   })
   .help()

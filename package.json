@@ -22,9 +22,12 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
+    "babel-preset-flow": "^6.23.0",
     "chai": "^4.1.2",
     "eslint": "^4.17.0",
     "eslint-config-prettier": "^2.9.0",
+    "flow": "^0.2.3",
+    "flow-bin": "^0.65.0",
     "jest": "^22.1.4",
     "jest-junit": "^3.5.0",
     "nock": "^9.1.6",
@@ -48,7 +51,8 @@
             "node": "6.10"
           }
         }
-      ]
+      ],
+      "flow"
     ]
   },
   "eslintConfig": {

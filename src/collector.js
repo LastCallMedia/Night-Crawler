@@ -1,12 +1,10 @@
-function statusCode(response, data) {
+// @flow
+import type { ResponseObj, CrawlResponse } from './crawler';
+
+export function statusCode(response: ResponseObj, data: CrawlResponse) {
   data.statusCode = response.statusCode;
 }
 
-function backendTime(response, data) {
+export function backendTime(response: ResponseObj, data: CrawlResponse) {
   data.backendTime = response.timingPhases.firstByte;
 }
-
-module.exports = {
-  statusCode,
-  backendTime
-};

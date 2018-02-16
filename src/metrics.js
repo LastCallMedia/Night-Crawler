@@ -1,70 +1,31 @@
-class Metric {
-  constructor(label) {
+// @flow
+
+export interface Metric {
+  displayName: string;
+  level: number;
+  value: number;
+  toString(): string;
+}
+
+class AbstractMetric {
+  displayName: string;
+  level: number;
+  value: number;
+  constructor(label: string, level: number, value: number) {
     this.displayName = label;
-    this.warningCheck = function(v) {};
-    this.errorCheck = function(v) {};
-  }
-  diff(metric) {
-    var pctVal = (metric.valueOf() / this.valueOf() - 1) * 100;
-    var sign = pctVal < 0 ? '-' : '+';
-    return `${sign}${Math.round(Math.abs(pctVal))}%`;
-  }
-  getLevel() {
-    if (this.isError()) {
-      return 2;
-    }
-    if (this.isWarning()) {
-      return 1;
-    }
-    return 0;
-  }
-  isWarning() {
-    return !!this.warningCheck(this.valueOf());
-  }
-  isError() {
-    return !!this.errorCheck(this.valueOf());
+    this.level = level;
+    this.value = value;
   }
 }
 
-class AverageNumber extends Metric {
-  constructor(label, points) {
-    super(label);
-    this.points = points || [];
-  }
-  valueOf() {
-    return this.points.length
-      ? this.points.reduce((sum, p) => sum + p, 0) / this.points.length
-      : 0;
-  }
+export class Percent extends AbstractMetric implements Metric {
   toString() {
-    return `${Math.round(this)}`;
+    return `${Math.round(this.value * 100)}%`;
   }
 }
 
-class AverageMilliseconds extends AverageNumber {
-    toString() {
-        return `${Math.round(this)}ms`;
-    }
-}
-
-class PercentTrue extends Metric {
-  constructor(label, points) {
-    super(label);
-    this.points = points || [];
-  }
-  valueOf() {
-    return this.points.length
-      ? this.points.filter(p => p).length / this.points.length * 100
-      : 0;
-  }
+export class Milliseconds extends AbstractMetric implements Metric {
   toString() {
-    return `${Math.round(this)}%`;
+    return `${Math.round(this.value)}ms`;
   }
 }
-
-module.exports = {
-  Metric,
-  AverageNumber,
-  AverageMilliseconds,
-  PercentTrue
-};
