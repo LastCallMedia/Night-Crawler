@@ -7,7 +7,7 @@ export interface Metric {
   toString(): string;
 }
 
-class AbstractMetric {
+export class Number implements Metric {
   displayName: string;
   level: number;
   value: number;
@@ -16,15 +16,18 @@ class AbstractMetric {
     this.level = level;
     this.value = value;
   }
+  toString() {
+    return `${this.value}`;
+  }
 }
 
-export class Percent extends AbstractMetric implements Metric {
+export class Percent extends Number {
   toString() {
     return `${Math.round(this.value * 100)}%`;
   }
 }
 
-export class Milliseconds extends AbstractMetric implements Metric {
+export class Milliseconds extends Number {
   toString() {
     return `${Math.round(this.value)}ms`;
   }
