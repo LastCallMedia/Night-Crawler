@@ -90,13 +90,16 @@ export class JunitFormatter implements Formatter {
     });
     const urlSuite = junit.testSuite().name(`${report.label} Urls`);
     report.results.forEach(res => {
-      let tc = urlSuite.testCase().className(res.url);
+      let tc = urlSuite
+        .testCase()
+        .className(res.url)
+        .time(res.time / 1000);
       switch (res.level) {
         case 2:
-          tc.failure(res.reason);
+          tc.failure(res.message);
           break;
         case 1:
-          tc.error(res.reason);
+          tc.error(res.message);
           break;
       }
     });

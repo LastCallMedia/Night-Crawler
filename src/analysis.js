@@ -2,17 +2,18 @@
 
 import type { Metric } from './metrics';
 
-type AnalyzedFailure = {
+type AnalyzedResult = {
   url: string,
   level: number,
-  reason: string
+  time: number,
+  message: string
 };
 
 export default class Analysis {
   label: string;
   date: Date;
   metrics: Map<string, Metric>;
-  results: Array<AnalyzedFailure>;
+  results: Array<AnalyzedResult>;
 
   constructor(label: string, date: Date) {
     this.label = label;
@@ -23,7 +24,12 @@ export default class Analysis {
   addMetric(key: string, metric: Metric) {
     this.metrics.set(key, metric);
   }
-  addResult(url: string, level: number, reason: string) {
-    this.results.push({ url, level, reason });
+  addResult(url: string, level: number, time: number, message: string) {
+    this.results.push({
+      url,
+      level: level || 0,
+      time: time || 0,
+      message: message || 'Ok'
+    });
   }
 }
