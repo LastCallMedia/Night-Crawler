@@ -15,14 +15,14 @@ export interface ComparisonFormatter {
   format(reports: Array<Analysis>): string;
 }
 
-function consoleDisplayValue(metric: Metric) {
-  switch (metric.level) {
+function consoleDisplayValue(level: number, value: string) {
+  switch (level) {
     case 2:
-      return chalk.red(metric.toString());
+      return chalk.red(value);
     case 1:
-      return chalk.yellow(metric.toString());
+      return chalk.yellow(value);
     default:
-      return metric.toString();
+      return value;
   }
 }
 
@@ -30,31 +30,51 @@ function consoleComparisonValue(baseline: Metric, metric: Metric | void) {
   if (!metric) {
     return 'N/A';
   }
-  const diff = calculateDiff(baseline, metric);
-  return `${consoleDisplayValue(metric)} (${consoleDisplayValue(diff)})`;
+
+  const diffMetric = calculateDiff(baseline, metric);
+  const value = consoleDisplayValue(metric.level, metric.toString());
+  const diff = consoleDisplayValue(diffMetric.level, diffMetric.toString());
+
+  return `${value} (${diff})`;
 }
 
 function calculateDiff(baseline: Metric, comparison: Metric): Metric {
-  return new Percent('Comparison', 0, comparison.value / baseline.value);
+  var diff = baseline.value > 0 ? comparison.value / baseline.value : 0;
+  return new Percent('Comparison', 0, diff);
 }
 
 export class ConsoleFormatter implements Formatter {
-  format(report: Analysis): string {
-    const table = new Table([], this.buildRows(report));
-    return table.render();
+  format(analysis: Analysis): string {
+    const listing = this.buildResults(analysis);
+    const aggregate = this.buildAggregate(analysis);
+
+    return `${listing}\n${aggregate}`;
   }
-  buildRows(report: Analysis) {
+  buildAggregate(analysis: Analysis): string {
+    return new Table([], this.buildAggregateRows(analysis)).render();
+  }
+  buildAggregateRows(report: Analysis) {
     return Array.from(report.metrics).map(([name, metric]) => {
-      return [metric.displayName, consoleDisplayValue(metric)];
+      return [
+        metric.displayName,
+        consoleDisplayValue(metric.level, metric.toString())
+      ];
     });
+  }
+  buildResults(analysis: Analysis): string {
+    return analysis.results
+      .map(res => {
+        return consoleDisplayValue(res.level, res.url);
+      })
+      .join('\n');
   }
 }
 
 export class JunitFormatter implements Formatter {
   format(report: Analysis): string {
-    const suite = junit.testSuite().name(report.label);
+    const aggregateSuite = junit.testSuite().name(`${report.label} Aggregates`);
     report.metrics.forEach((metric, name) => {
-      let tc = suite
+      let tc = aggregateSuite
         .testCase()
         .className(name)
         .name(metric.displayName || name)
@@ -68,6 +88,19 @@ export class JunitFormatter implements Formatter {
           break;
       }
     });
+    const urlSuite = junit.testSuite().name(`${report.label} Urls`);
+    report.results.forEach(res => {
+      let tc = urlSuite.testCase().className(res.url);
+      switch (res.level) {
+        case 2:
+          tc.failure(res.reason);
+          break;
+        case 1:
+          tc.error(res.reason);
+          break;
+      }
+    });
+
     return junit.build();
   }
 }
@@ -85,7 +118,9 @@ export class ConsoleComparisonFormatter implements ComparisonFormatter {
       let comparisonMetrics = rest.map(r => r.metrics.get(name));
 
       let row = [baselineMetric.displayName];
-      row.push(consoleDisplayValue(baselineMetric));
+      row.push(
+        consoleDisplayValue(baselineMetric.level, baselineMetric.toString())
+      );
       return row.concat(
         comparisonMetrics.map(metric =>
           consoleComparisonValue(baselineMetric, metric)
