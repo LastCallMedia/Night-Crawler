@@ -1,5 +1,5 @@
 import Crawler from '../src/crawler';
-import { Report } from '../src/report';
+import Analysis from '../src/analysis';
 
 var nock = require('nock');
 
@@ -141,7 +141,7 @@ describe('Crawler', () => {
     it('Should return a report from analyze', function() {
       var c = new Crawler();
       return c.analyze([]).then(report => {
-        expect(report).toBeInstanceOf(Report);
+        expect(report).toBeInstanceOf(Analysis);
       });
     });
   });

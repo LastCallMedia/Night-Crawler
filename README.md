@@ -13,6 +13,7 @@ Define your crawler by creating a `nightcrawler.js` file, like this:
 ```js
 # nightcrawler.js
 const Crawler = require('./src/crawler');
+const Number = require('./src/metrics').Number;
 
 const myCrawler = new Crawler();
 
@@ -22,10 +23,10 @@ myCrawler.on('setup', function(crawler) {
    crawler.enqueue('http://localhost/foo'); 
 });
 
-myCrawler.on('analyze', function(data) {
+myCrawler.on('analyze', function(crawlReport, analysis) {
     // On analysis, derive the metrics you need from the
     // array of collected data.
-    console.log("Crawled " + data.length + " pages");
+    analysis.add('count', new Number('Total Requests', 0, crawlReport.data.length));
 });
 
 module.exports = myCrawler;
@@ -51,10 +52,10 @@ myCrawler.on('setup', function(crawler) {
    }); 
 });
 
-myCrawler.on('analyze', function(data) {
-    var awesomeRequests = data.filter(function(dataPoint) {
+myCrawler.on('analyze', function(crawlReport, analysis) {
+    var awesomeRequests = crawlReport.data.filter(function(point) {
         // *group property is only available if you added it during queuing.
-        return dataPoint.group === 'awesome';
+        return point.group === 'awesome';
     });
     // Do additional analysis only on pages in the awesome group.
 })
@@ -98,23 +99,36 @@ Analysis
 Once the crawl has been completed, you will probably want to analyze the data in some way.  Data analysis in Nightcrawler is intentionally loose - the crawler fires an `analyze` event with an array of collected data, and you are responsible for analyzing your own data.  Here are some examples of things you might do during analysis:
  
  ```js
-myCrawler.on('analyze', function(data) {
+const metrics = require('./src/metrics');
+const Number = metrics.Number;
+const Milliseconds = metrics.Milliseconds;
+const Percent = metrics.Percent;
+
+myCrawler.on('analyze', function(crawlReport, analysis) {
+    var data = crawlReport.data;
+    
+    // Calculate the number of requests that were made:
+    analysis.add('count', new Number('Total Requests', 0, data.length));
+    
     // Calculate the average response time:
     var avgTime = data.reduce(function(sum, dataPoint) {
         return sum + dataPoint.backendTime
     }, 0) / data.length;
-    console.log('Average response time: ' + Math.round(avgTime) + 'ms');
+    analysis.add('time', new Milliseconds('Avg Response Time', 0, avgTime));
     
     // Calculate the percent of requests that were marked failed:
     var failRatio = data.filter(function(dataPoint) {
         return dataPoint.fail === true;
     }).length / data.length;
-    console.log('Percent failed: ' + (Math.round(failRatio) * 100) + '%');
+    var level = failRatio > 0 ? 2 : 0;
+    analysis.add('fail', new Percent('% Failed', level, failRatio));
     
     // Calculate the percent of requests that resulted in a 500 response.
     var serverErrorRatio = data.filter(function(dataPoint) {
         return dataPoint.statusCode >= 500;
     }).length / data.length;
-    console.log('Percent resulting in 5xx: ' + serverErrorRatio);
+    var level = serverErrorRatio > 0 ? 2 : 0;
+    analysis.add('500', new Percent('% 500', level, serverErrorRatio));
 });
 ```
+The [`analysis`](./src/analysis.js) object can consist of many metrics, added through the `add` method. See [`src/metrics.js`](./src/metrics.js) for more information about metrics. 

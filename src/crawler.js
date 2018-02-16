@@ -9,7 +9,7 @@ import {
   statusCode as statusCodeCollector,
   backendTime as backendTimeCollector
 } from './collector';
-const Report = require('./report').Report;
+import Analysis from './analysis';
 
 export type CrawlRequest = {
   url: string,
@@ -157,8 +157,8 @@ class Crawler extends EventEmitter {
     return collected;
   }
 
-  async analyze(report: CrawlReport): Promise<Report> {
-    const analysis = new Report(report.name, report.date);
+  async analyze(report: CrawlReport): Promise<Analysis> {
+    const analysis = new Analysis(report.name, report.date);
     await this.emit('analyze', report, analysis);
     return analysis;
   }

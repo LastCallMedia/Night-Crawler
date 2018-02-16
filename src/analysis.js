@@ -2,7 +2,7 @@
 
 import type { Metric } from './metrics';
 
-export class Report {
+export default class Analysis {
   label: string;
   date: Date;
   metrics: Map<string, Metric>;

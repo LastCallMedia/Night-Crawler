@@ -4,15 +4,15 @@ import junit from 'junit-report-builder';
 import chalk from 'chalk';
 import Table from 'tty-table';
 import { Percent } from './metrics';
-import type { Report } from './report';
+import type Analysis from './analysis';
 import type { Metric } from './metrics';
 
 export interface Formatter {
-  format(report: Report): string;
+  format(report: Analysis): string;
 }
 
 export interface ComparisonFormatter {
-  format(reports: Array<Report>): string;
+  format(reports: Array<Analysis>): string;
 }
 
 function consoleDisplayValue(metric: Metric) {
@@ -39,11 +39,11 @@ function calculateDiff(baseline: Metric, comparison: Metric): Metric {
 }
 
 export class ConsoleFormatter implements Formatter {
-  format(report: Report): string {
+  format(report: Analysis): string {
     const table = new Table([], this.buildRows(report));
     return table.render();
   }
-  buildRows(report: Report) {
+  buildRows(report: Analysis) {
     return Array.from(report.metrics).map(([name, metric]) => {
       return [metric.displayName, consoleDisplayValue(metric)];
     });
@@ -51,7 +51,7 @@ export class ConsoleFormatter implements Formatter {
 }
 
 export class JunitFormatter implements Formatter {
-  format(report: Report): string {
+  format(report: Analysis): string {
     const suite = junit.testSuite().name(report.label);
     report.metrics.forEach((metric, name) => {
       let tc = suite
@@ -73,11 +73,11 @@ export class JunitFormatter implements Formatter {
 }
 
 export class ConsoleComparisonFormatter implements ComparisonFormatter {
-  format(reports: Array<Report>): string {
+  format(reports: Array<Analysis>): string {
     const table = new Table([], this.buildRows(reports), {});
     return table.render();
   }
-  buildRows(reports: Array<Report>) {
+  buildRows(reports: Array<Analysis>) {
     const baseline = reports[0];
     const rest = reports.slice(1);
 

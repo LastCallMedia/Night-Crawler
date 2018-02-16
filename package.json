@@ -36,6 +36,7 @@
   "scripts": {
     "prettier": "prettier --single-quote --write '{src,test}/**/*.{js,jsx}' '*.js'",
     "test": "jest",
+    "flow": "flow",
     "build": "babel src/ --out-dir=dist"
   },
   "files": [
