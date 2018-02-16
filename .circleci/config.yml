@@ -11,6 +11,9 @@ jobs:
           name: "ESLint"
           command: node_modules/.bin/eslint --format junit -o /tmp/junit/eslint.xml
       - run:
+          name: "Flow"
+          command: node_modules/.bin/flow
+      - run:
           name: "Jest"
           command: node_modules/.bin/jest --ci --testResultsProcessor="jest-junit"
           environment:
