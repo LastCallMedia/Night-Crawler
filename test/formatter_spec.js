@@ -8,14 +8,14 @@ import Analysis from '../src/analysis';
 import { Number } from '../src/metrics';
 
 describe('Console Formatter', function() {
-    let originalCols;
-    beforeEach(function() {
-        originalCols = process.stdout.columns;
-        process.stdout.columns = 100;
-    });
-    afterEach(function() {
-        process.stdout.columns = originalCols;
-    })
+  let originalCols;
+  beforeEach(function() {
+    originalCols = process.stdout.columns;
+    process.stdout.columns = 100;
+  });
+  afterEach(function() {
+    process.stdout.columns = originalCols;
+  });
   it('Should output a listing of results marked according to level', function() {
     var a = new Analysis('test', new Date());
     a.addResult('OK', 0, 10, 'm1');
@@ -54,14 +54,14 @@ describe('JUnit formatter', function() {
 });
 
 describe('Console Comparison Formatter', function() {
-    let originalCols;
-    beforeEach(function() {
-        originalCols = process.stdout.columns;
-        process.stdout.columns = 100;
-    });
-    afterEach(function() {
-        process.stdout.columns = originalCols;
-    })
+  let originalCols;
+  beforeEach(function() {
+    originalCols = process.stdout.columns;
+    process.stdout.columns = 100;
+  });
+  afterEach(function() {
+    process.stdout.columns = originalCols;
+  });
   it('Should compare metrics from two analyses', function() {
     var a = new Analysis('test', new Date());
     a.addMetric('ok', new Number('OK metric', 0, 0));
