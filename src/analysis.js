@@ -2,7 +2,7 @@
 
 import type { Metric } from './metrics';
 
-type AnalyzedResult = {
+export type AnalyzedResult = {
   url: string,
   level: number,
   time: number,
@@ -21,9 +21,25 @@ export default class Analysis {
     this.metrics = new Map();
     this.results = [];
   }
+
+  /**
+   * Add a single metric to the analysis.
+   *
+   * @param key
+   * @param metric
+   */
   addMetric(key: string, metric: Metric) {
     this.metrics.set(key, metric);
   }
+
+    /**
+     * Add a single URL result to the analysis.
+     *
+     * @param url
+     * @param level
+     * @param time
+     * @param message
+     */
   addResult(url: string, level: number, time: number, message: string) {
     this.results.push({
       url,

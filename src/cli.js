@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 var ProgressBar = require('ascii-progress');
 import {
-  JunitFormatter,
+  JUnitFormatter,
   ConsoleFormatter,
   ConsoleComparisonFormatter
 } from './formatters';
@@ -32,7 +32,7 @@ function loadReport(filename) {
 function formatterFactory(type): Formatter {
   switch (type) {
     case 'junit':
-      return new JunitFormatter();
+      return new JUnitFormatter();
     case 'console':
       return new ConsoleFormatter();
     default:
