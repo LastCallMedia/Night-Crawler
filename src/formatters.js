@@ -54,7 +54,7 @@ export class ConsoleFormatter implements Formatter {
   buildAggregate(analysis: Analysis): string {
     const rows = this.buildAggregateRows(analysis);
     if (rows.length) {
-      return new Table([], rows).render();
+      return new Table([], rows, {headerColor: false}).render();
     }
     return chalk.yellow('No Results');
   }
@@ -132,7 +132,7 @@ export class ConsoleComparisonFormatter implements ComparisonFormatter {
   format(reports: Array<Analysis>): string {
     const rows = this.buildRows(reports);
     if (rows.length) {
-      return new Table(this.buildHeader(reports), rows).render();
+      return new Table(this.buildHeader(reports), rows, {headerColor: false}).render();
     }
     return chalk.yellow('No Results');
   }
