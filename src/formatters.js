@@ -132,7 +132,7 @@ export class ConsoleComparisonFormatter implements ComparisonFormatter {
   format(reports: Array<Analysis>): string {
     const rows = this.buildRows(reports);
     if (rows.length) {
-      return new Table(this.buildHeader(reports), rows, {}).render();
+      return new Table(this.buildHeader(reports), rows).render();
     }
     return chalk.yellow('No Results');
   }
