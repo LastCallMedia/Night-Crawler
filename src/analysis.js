@@ -32,14 +32,14 @@ export default class Analysis {
     this.metrics.set(key, metric);
   }
 
-    /**
-     * Add a single URL result to the analysis.
-     *
-     * @param url
-     * @param level
-     * @param time
-     * @param message
-     */
+  /**
+   * Add a single URL result to the analysis.
+   *
+   * @param url
+   * @param level
+   * @param time
+   * @param message
+   */
   addResult(url: string, level: number, time: number, message: string) {
     this.results.push({
       url,
