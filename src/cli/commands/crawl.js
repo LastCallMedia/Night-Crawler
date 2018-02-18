@@ -3,6 +3,7 @@
 import { requireCrawler, writeJSON } from '../util';
 import formatterFactory from '../formatters';
 import ProgressBar from 'ascii-progress';
+import { FailedAnalysisError } from '../errors';
 import type yargs from 'yargs';
 
 exports.command = 'crawl [crawlerfile]';
@@ -62,12 +63,17 @@ exports.handler = async function(argv: Object) {
     writeJSON(output, data);
   }
 
+  const analysis = await crawler.analyze(data);
+
   if (format) {
-    const analysis = await crawler.analyze(data);
     const formatter = formatterFactory(format, formatOptions);
-    let output = formatter.format(analysis);
-    if (output) {
+    let formattedOutput = formatter.format(analysis);
+    if (formattedOutput) {
       console.log(output);
     }
+  }
+
+  if (analysis.hasFailures()) {
+    throw new FailedAnalysisError('Analysis reported an error');
   }
 };

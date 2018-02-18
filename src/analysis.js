@@ -48,4 +48,17 @@ export default class Analysis {
       message: message || 'Ok'
     });
   }
+
+  /**
+   * Check whether this analysis contains any failing results.
+   *
+   * @return {boolean}
+   */
+  hasFailures(): boolean {
+    var failingResults = this.results.filter(r => r.level > 1);
+    var failingMetrics = Array.from(this.metrics).filter(
+      ([name, metric]) => metric.level > 1
+    );
+    return failingResults.length > 0 || failingMetrics.length > 0;
+  }
 }
