@@ -46,10 +46,12 @@ exports.handler = async function(argv: Object) {
   if (!silent) {
     console.log(`Starting crawl`);
     progress = new ProgressBar({ total: 1 });
-    crawler.on('response', () => {
-      progress.total = crawler.queue.length;
-      progress.tick();
-    });
+    let tick = () => {
+        progress.total = crawler.queue.length;
+        progress.tick();
+    }
+    crawler.on('response.success', tick);
+    crawler.on('response.error', tick);
   }
 
   const data = await crawler.crawl();
