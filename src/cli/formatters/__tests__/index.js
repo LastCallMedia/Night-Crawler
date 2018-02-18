@@ -1,9 +1,9 @@
-import ConsoleFormatter from '../src/cli/formatters/console';
-import JUnitFormatter from '../src/cli/formatters/junit';
-import ConsoleComparisonFormatter from '../src/cli/formatters/comparison';
-import factory from '../src/cli/formatters';
-import Analysis from '../src/analysis';
-import { Number } from '../src/metrics';
+import ConsoleFormatter from '../console';
+import JUnitFormatter from '../junit';
+import ConsoleComparisonFormatter from '../comparison';
+import factory from '../';
+import Analysis from '../../../analysis';
+import { Number } from '../../../metrics';
 
 describe('Console Formatter', function() {
   let originalCols;

@@ -5,44 +5,17 @@ const request = require('request-promise');
 const EventEmitter = require('events-async');
 const log = require('debug')('nightcrawler:info');
 const error = require('debug')('nightcrawler:error');
-import {
-  statusCode as statusCodeCollector,
-  backendTime as backendTimeCollector
-} from './collector';
 import Analysis from './analysis';
+import RequestDriver from './driver/request';
 
-export type CrawlRequest = {
-  url: string,
-  [string]: any
-};
-
-export type CrawlResponse = {
-  url: string,
-  err: boolean,
-  [string]: any
-};
-
-export type CrawlReport = {
-  name: string,
-  date: Date,
-  data: Array<CrawlResponse>
-};
-
-export type ResponseObj = {
-  [key: string]: any
-};
-export type ErrorResponseObj = {
-  response: ResponseObj,
-  [key: string]: any
-};
+import type { Driver, CrawlRequest, CrawlResponse, CrawlReport } from './types';
 
 class Crawler extends EventEmitter {
-  constructor(name: string) {
+  constructor(name: string, driver: Driver = new RequestDriver()) {
     super();
     this.name = name;
     this.queue = [];
-    this.on('response', statusCodeCollector);
-    this.on('response', backendTimeCollector);
+    this.driver = driver;
   }
 
   /**
@@ -50,14 +23,13 @@ class Crawler extends EventEmitter {
    *
    * @returns {Promise.<Bluebird.<U[]>>}
    */
-  async crawl(concurrency: number): Promise<CrawlReport> {
-    concurrency = concurrency || 3;
+  async crawl(concurrency: number = 3): Promise<CrawlReport> {
     // Always reset the queue before beginning.
-    this.queue = [];
     await this.setup();
-    log(`Beginning crawl of ${this.queue.length} urls`);
+    log(`Starting crawl of ${this.queue.length} urls`);
 
     return {
+      name: this.name,
       date: new Date(),
       data: await this.work(concurrency)
     };
@@ -69,6 +41,8 @@ class Crawler extends EventEmitter {
    * @returns {Promise<Bluebird<Array>|Bluebird<function(*, *=)>>}
    */
   async setup() {
+    log(`Starting setup`);
+    this.queue = [];
     return this.emit('setup', this);
   }
 
@@ -88,14 +62,9 @@ class Crawler extends EventEmitter {
    *
    * @returns {Promise<Bluebird<U[]>>}
    */
-  async work(concurrency: number): Promise<Array<CrawlResponse>> {
-    return Promise.map(
-      this.queue,
-      cr => {
-        return this.fetch(cr);
-      },
-      { concurrency }
-    );
+  async work(concurrency: number = 3): Promise<Array<CrawlResponse>> {
+    const doOne = (cr: CrawlRequest) => this.fetch(cr);
+    return Promise.map(this.queue, doOne, { concurrency });
   }
 
   /**
@@ -106,15 +75,11 @@ class Crawler extends EventEmitter {
    */
   async fetch(req: CrawlRequest): Promise<CrawlResponse> {
     log(`Fetching ${req.url}`);
-    return request
-      .get({
-        url: req.url,
-        time: true,
-        resolveWithFullResponse: true,
-        forever: true // Use keepalive for faster reconnects.
-      })
-      .then(res => this.collectSuccess(req, res))
-      .catch(err => this.collectError(req, err));
+
+    return this.driver
+      .fetch(req)
+      .then(res => this._collectSuccess(req, res))
+      .catch(res => this._collectError(req, res));
   }
 
   /**
@@ -124,15 +89,19 @@ class Crawler extends EventEmitter {
    * @param response
    * @returns {Promise.<*>}
    */
-  async collectSuccess(
+  async _collectSuccess(
     crawlRequest: CrawlRequest,
-    response: ResponseObj
+    response: Object
   ): Promise<CrawlResponse> {
     log(`Success on ${crawlRequest.url}`);
-    let collected = Object.assign({}, crawlRequest, {
-      error: false
-    });
-    await this.emit('response', response, collected);
+
+    let collected = Object.assign(
+      {},
+      crawlRequest,
+      { error: false },
+      this.driver.collect(response)
+    );
+    await this.emit('response.success', response, collected);
     return collected;
   }
 
@@ -143,17 +112,13 @@ class Crawler extends EventEmitter {
    * @param err
    * @returns {Promise.<*>}
    */
-  async collectError(
+  async _collectError(
     crawlRequest: CrawlRequest,
-    err: ErrorResponseObj
+    err: Error
   ): Promise<CrawlResponse> {
     error(`Error on ${crawlRequest.url}`);
-    let collected = Object.assign({}, crawlRequest, {
-      error: true
-    });
-    if (err.response) {
-      await this.emit('response', err.response, collected);
-    }
+    let collected = Object.assign(crawlRequest, { error: true });
+    await this.emit('response.error', err, collected);
     return collected;
   }
 

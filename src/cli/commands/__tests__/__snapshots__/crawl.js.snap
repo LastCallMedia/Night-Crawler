@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Crawl Command Displays output to indicate the success of the crawl 1`] = `
+"Starting crawl
+Crawled 2 urls in 0 seconds."
+`;

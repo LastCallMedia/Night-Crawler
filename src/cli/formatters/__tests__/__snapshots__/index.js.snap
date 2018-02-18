@@ -1,0 +1,95 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Console Comparison Formatter Should compare metrics from two analyses 1`] = `
+"
+  ┌───────────────────┬───────────────────┬───────────────────┐
+  │      Metric       │        #1         │        #2         │
+  ├───────────────────┼───────────────────┼───────────────────┤
+  │     OK metric     │         0         │      0 (0%)       │
+  ├───────────────────┼───────────────────┼───────────────────┤
+  │    WARN metric    │[33m         2         [39m│[33m   2[39m (100%)    │
+  ├───────────────────┼───────────────────┼───────────────────┤
+  │    ERR metric     │[31m         5         [39m│[31m   5[39m (100%)    │
+  └───────────────────┴───────────────────┴───────────────────┘"
+`;
+
+exports[`Console Comparison Formatter Should output "no results" if a report has no metrics 1`] = `"[33mNo Results[39m"`;
+
+exports[`Console Formatter Should output a listing of results marked according to level 1`] = `
+"Results
+======
+OK
+[33mWARN[39m
+[31mERR[39m
+
+Metrics
+=======
+[33mNo Results[39m"
+`;
+
+exports[`Console Formatter Should output aggregates, marked by level 1`] = `
+"Results
+======
+[33mNo Results[39m
+
+Metrics
+=======
+
+  ┌───────────────────┬───────────────────┐
+  │     OK metric     │         0         │
+  ├───────────────────┼───────────────────┤
+  │    WARN metric    │[33m         2         [39m│
+  ├───────────────────┼───────────────────┤
+  │    ERR metric     │[31m         5         [39m│
+  └───────────────────┴───────────────────┘"
+`;
+
+exports[`Console Formatter Should show no results when there are no results or metrics 1`] = `
+"Results
+======
+[33mNo Results[39m
+
+Metrics
+=======
+[33mNo Results[39m"
+`;
+
+exports[`JUnit formatter Should output a listing of results 1`] = `
+"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
+<testsuites>
+  <testsuite name=\\"Results\\" tests=\\"3\\" failures=\\"1\\" errors=\\"1\\" skipped=\\"0\\">
+    <testcase classname=\\"OK\\" time=\\"0.01\\"/>
+    <testcase classname=\\"WARN\\" time=\\"0.01\\">
+      <error message=\\"m1\\"/>
+    </testcase>
+    <testcase classname=\\"ERR\\" time=\\"0.01\\">
+      <failure message=\\"m1\\"/>
+    </testcase>
+  </testsuite>
+</testsuites>"
+`;
+
+exports[`JUnit formatter Should output aggregates, marked by level 1`] = `
+"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
+<testsuites>
+  <testsuite name=\\"Aggregates\\" tests=\\"3\\" failures=\\"1\\" errors=\\"1\\" skipped=\\"0\\">
+    <testcase classname=\\"ok\\" name=\\"OK metric\\">
+      <system-out>
+        <![CDATA[0]]>
+      </system-out>
+    </testcase>
+    <testcase classname=\\"warn\\" name=\\"WARN metric\\">
+      <error/>
+      <system-out>
+        <![CDATA[2]]>
+      </system-out>
+    </testcase>
+    <testcase classname=\\"err\\" name=\\"ERR metric\\">
+      <failure/>
+      <system-out>
+        <![CDATA[5]]>
+      </system-out>
+    </testcase>
+  </testsuite>
+</testsuites>"
+`;
