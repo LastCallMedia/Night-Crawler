@@ -69,7 +69,7 @@ exports.handler = async function(argv: Object) {
     const formatter = formatterFactory(format, formatOptions);
     let formattedOutput = formatter.format(analysis);
     if (formattedOutput) {
-      console.log(output);
+      console.log(formattedOutput);
     }
   }
 
