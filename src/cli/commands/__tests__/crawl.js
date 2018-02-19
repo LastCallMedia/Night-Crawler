@@ -1,4 +1,5 @@
 import { handler } from '../crawl';
+import stream from 'stream';
 import Crawler from '../../../crawler';
 import DummyDriver from '../../../driver/dummy';
 import { Number } from '../../../metrics';
@@ -12,16 +13,14 @@ describe('Crawl Command', function() {
 
     return handler({
       crawlerfile: crawler,
-      silent: true
+      stdout: new stream.PassThrough()
     }).then(function() {
       expect(called).toEqual(1);
     });
   });
 
   it('Displays output to indicate the success of the crawl', function() {
-    // Redirect console output to a spy and silence.
-    const spy = jest.spyOn(global.console, 'log');
-    spy.mockImplementation(() => {});
+    var stdout = new stream.PassThrough();
 
     const crawler = new Crawler('', new DummyDriver());
     crawler.on('setup', () => {
@@ -30,16 +29,15 @@ describe('Crawl Command', function() {
     });
 
     return handler({
-      crawlerfile: crawler
+      crawlerfile: crawler,
+      stdout
     }).then(function() {
-      expect(spy.mock.calls.join('\n')).toMatchSnapshot();
+      expect(stdout.read().toString()).toMatchSnapshot();
     });
   });
 
   it('Outputs analysis at the end of the crawl if requested', function() {
-    // Redirect console output to a spy and silence.
-    const spy = jest.spyOn(global.console, 'log');
-    spy.mockImplementation(() => {});
+    var stdout = new stream.PassThrough();
 
     const crawler = new Crawler('', new DummyDriver());
     crawler.on('analyze', function(r, a) {
@@ -48,19 +46,13 @@ describe('Crawl Command', function() {
 
     return handler({
       crawlerfile: crawler,
-      format: 'console',
-      silent: true
+      stdout
     }).then(function() {
-      console.log(spy.mock.calls);
-      expect(spy.mock.calls.join('\n')).toContain('MyTestMetric');
+      expect(stdout.read().toString()).toContain('MyTestMetric');
     });
   });
 
   it('Throws an error if the analysis contains failures', function() {
-    // Redirect console output to a spy and silence.
-    const spy = jest.spyOn(global.console, 'log');
-    spy.mockImplementation(() => {});
-
     const crawler = new Crawler('', new DummyDriver());
     crawler.on('analyze', function(r, a) {
       a.addMetric('foo', new Number('MyTestMetric', 2, 1));
@@ -69,8 +61,7 @@ describe('Crawl Command', function() {
     let called = 0;
     return handler({
       crawlerfile: crawler,
-      format: 'console',
-      silent: true
+      stdout: new stream.PassThrough()
     })
       .catch(function(err) {
         called++;

@@ -16,7 +16,7 @@ describe('Crawler', () => {
     var c = new Crawler();
     return c
       .on('setup', cb)
-      .crawl()
+      .setup()
       .then(() => {
         // Asserts called 1x, with crawler as arg.
         expect(cb.mock.calls).toEqual([[c]]);

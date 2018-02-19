@@ -21,18 +21,13 @@ class Crawler extends EventEmitter {
   /**
    * Run a full crawl.
    *
+   * This is just a shorthand for calling setup then crawl.
+   *
    * @returns {Promise.<Bluebird.<U[]>>}
    */
   async crawl(concurrency: number = 3): Promise<CrawlReport> {
-    // Always reset the queue before beginning.
     await this.setup();
-    log(`Starting crawl of ${this.queue.length} urls`);
-
-    return {
-      name: this.name,
-      date: new Date(),
-      data: await this.work(concurrency)
-    };
+    return this.work(concurrency);
   }
 
   /**
@@ -42,6 +37,7 @@ class Crawler extends EventEmitter {
    */
   async setup() {
     log(`Starting setup`);
+    // Always reset the queue before beginning.
     this.queue = [];
     return this.emit('setup', this);
   }
@@ -62,9 +58,14 @@ class Crawler extends EventEmitter {
    *
    * @returns {Promise<Bluebird<U[]>>}
    */
-  async work(concurrency: number = 3): Promise<Array<CrawlResponse>> {
-    const doOne = (cr: CrawlRequest) => this.fetch(cr);
-    return Promise.map(this.queue, doOne, { concurrency });
+  async work(concurrency: number = 3): Promise<CrawlReport> {
+    log(`Starting crawl of ${this.queue.length} urls`);
+    const doOne = (cr: CrawlRequest) => this._fetch(cr);
+    return {
+      name: this.name,
+      date: new Date(),
+      data: await Promise.map(this.queue, doOne, { concurrency })
+    };
   }
 
   /**
@@ -73,7 +74,7 @@ class Crawler extends EventEmitter {
    * @param req
    * @returns {Promise.<T>}
    */
-  async fetch(req: CrawlRequest): Promise<CrawlResponse> {
+  async _fetch(req: CrawlRequest): Promise<CrawlResponse> {
     log(`Fetching ${req.url}`);
 
     return this.driver
