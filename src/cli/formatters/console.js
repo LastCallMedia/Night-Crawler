@@ -1,7 +1,7 @@
 // @flow
 
-import { consoleDisplayValue } from '../util';
-import Table from 'tty-table';
+import { consoleDisplayValue, stringLength } from '../util';
+import table from 'markdown-table';
 import type Formatter from './types';
 import type Analysis from '../../analysis';
 
@@ -15,7 +15,7 @@ export default class ConsoleFormatter implements Formatter {
   buildAggregate(analysis: Analysis): string {
     const rows = this.buildAggregateRows(analysis);
     if (rows.length) {
-      return new Table([], rows, { headerColor: false }).render();
+      return table([['Name', 'Value']].concat(rows), { stringLength });
     }
     return consoleDisplayValue(1, 'No Results');
   }
@@ -28,13 +28,15 @@ export default class ConsoleFormatter implements Formatter {
     });
   }
   buildResults(analysis: Analysis): string {
-    if (analysis.results.length) {
-      return analysis.results
-        .map(res => {
-          return consoleDisplayValue(res.level, res.url);
-        })
-        .join('\n');
+    const rows = this.buildResultRows(analysis);
+    if (rows.length) {
+      return table([['Url']].concat(rows), { stringLength });
     }
     return consoleDisplayValue(1, 'No Results');
+  }
+  buildResultRows(analysis: Analysis) {
+    return analysis.results.map(res => [
+      consoleDisplayValue(res.level, res.url)
+    ]);
   }
 }

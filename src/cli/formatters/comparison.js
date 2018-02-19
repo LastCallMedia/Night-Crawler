@@ -1,7 +1,7 @@
 // @flow
 
-import Table from 'tty-table';
-import { consoleDisplayValue } from '../util';
+import table from 'markdown-table';
+import { consoleDisplayValue, stringLength } from '../util';
 import type { ComparisonFormatter } from './types';
 import type Analysis from '../../analysis';
 import type { Metric } from '../../metrics';
@@ -10,17 +10,15 @@ export default class ConsoleComparisonFormatter implements ComparisonFormatter {
   format(reports: Array<Analysis>): string {
     const rows = this.buildRows(reports);
     if (rows.length) {
-      return new Table(this.buildHeader(reports), rows, {
-        headerColor: false
-      }).render();
+      return table([this.buildHeader(reports)].concat(rows), { stringLength });
     }
     return consoleDisplayValue(1, 'No Results');
   }
   buildHeader(reports: Array<Analysis>) {
     const reportHeaders = reports.map((report, i) => {
-      return { alias: `#${i + 1}` };
+      return `Report #${i + 1}`;
     });
-    return [{ alias: 'Metric' }].concat(reportHeaders);
+    return ['Name'].concat(reportHeaders);
   }
   buildRows(reports: Array<Analysis>) {
     const baseline = reports[0];

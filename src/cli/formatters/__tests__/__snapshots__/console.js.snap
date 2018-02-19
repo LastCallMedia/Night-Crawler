@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Console Formatter Should output a listing of results marked according to level 1`] = `
+"Results
+======
+| Url  |
+| ---- |
+| OK   |
+| [33mWARN[39m |
+| [31mERR[39m  |
+
+Metrics
+=======
+[33mNo Results[39m"
+`;
+
+exports[`Console Formatter Should output aggregates, marked by level 1`] = `
+"Results
+======
+[33mNo Results[39m
+
+Metrics
+=======
+| Name        | Value |
+| ----------- | ----- |
+| OK metric   | 0     |
+| WARN metric | [33m2[39m     |
+| ERR metric  | [31m5[39m     |"
+`;
+
+exports[`Console Formatter Should show no results when there are no results or metrics 1`] = `
+"Results
+======
+[33mNo Results[39m
+
+Metrics
+=======
+[33mNo Results[39m"
+`;

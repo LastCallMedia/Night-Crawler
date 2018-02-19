@@ -42,7 +42,7 @@ exports.handler = async function(argv: Object) {
 
   const analysis = await spunCrawler.analyze(data);
 
-  stdout.write(new ConsoleFormatter().format(analysis));
+  stdout.write(new ConsoleFormatter().format(analysis) + EOL);
 
   if (output) {
     writeJSON(output, data);
