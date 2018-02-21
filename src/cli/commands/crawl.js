@@ -14,7 +14,8 @@ type ArgVShape = {
   crawlerfile: string,
   json: string,
   junit: string,
-  stdout: Object
+  stdout: Object,
+  concurrency: number
 };
 
 exports.command = 'crawl [crawlerfile]';
@@ -26,6 +27,13 @@ exports.builder = (yargs: yargs) => {
     type: 'string',
     normalize: true
   });
+  yargs.option('concurrency', {
+    alias: 'c',
+    describe: 'number of requests allowed in-flight at once',
+    type: 'number',
+    required: true,
+    default: 3,
+  })
   yargs.option('silent', {
     alias: 'n',
     describe: 'silence all output',
@@ -48,13 +56,13 @@ exports.builder = (yargs: yargs) => {
   });
 };
 exports.handler = async function(argv: ArgVShape) {
-  const { crawlerfile, json = '', junit = '', stdout = process.stdout } = argv;
+  const { crawlerfile, json = '', junit = '', concurrency = 3, stdout = process.stdout } = argv;
   const crawler = requireCrawler(crawlerfile);
   const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
 
   await spunCrawler.setup();
 
-  const data = await spunCrawler.work();
+  const data = await spunCrawler.work(concurrency);
 
   const analysis = await spunCrawler.analyze(data);
 
