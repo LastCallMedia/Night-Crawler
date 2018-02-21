@@ -12,10 +12,10 @@ yarn add lastcall-nightcrawler
 Define your crawler by creating a `nightcrawler.js` file, like this:
 ```js
 # nightcrawler.js
-const Crawler = require('./src/crawler');
-const Number = require('./src/metrics').Number;
+const Crawler = require('lastcall-nightcrawler');
+const Number  = Crawler.metrics.Number;
 
-const myCrawler = new Crawler();
+const myCrawler = new Crawler('My Crawler');
 
 myCrawler.on('setup', function(crawler) {
    // On setup, give the crawler a list of URLs to crawl.
@@ -33,8 +33,8 @@ module.exports = myCrawler;
 ```
 Run your crawler:
 ```bash
-# Run the crawler and save the collected data to a file.
-node_modules/.bin/nightcrawler run -o report.json
+# Run the crawler.
+node_modules/.bin/nightcrawler run
 ```
 
 Queueing Requests
@@ -58,6 +58,7 @@ myCrawler.on('analyze', function(crawlReport, analysis) {
         return point.group === 'awesome';
     });
     // Do additional analysis only on pages in the awesome group.
+    analysis.add('awesome.count', new Number('Awesome Requests', 0, awesomeRequests.length));
 })
 ```
 
@@ -99,10 +100,10 @@ Analysis
 Once the crawl has been completed, you will probably want to analyze the data in some way.  Data analysis in Nightcrawler is intentionally loose - the crawler fires an `analyze` event with an array of collected data, and you are responsible for analyzing your own data.  Here are some examples of things you might do during analysis:
  
  ```js
-const metrics = require('./src/metrics');
-const Number = metrics.Number;
-const Milliseconds = metrics.Milliseconds;
-const Percent = metrics.Percent;
+const Crawler = require('lastcall-nightcrawler');
+const Number  = Crawler.metrics.Number;
+const Milliseconds = Crawler.metrics.Milliseconds;
+const Percent = Crawler.metrics.Percent;
 
 myCrawler.on('analyze', function(crawlReport, analysis) {
     var data = crawlReport.data;
@@ -131,4 +132,17 @@ myCrawler.on('analyze', function(crawlReport, analysis) {
     analysis.add('500', new Percent('% 500', level, serverErrorRatio));
 });
 ```
-The [`analysis`](./src/analysis.js) object can consist of many metrics, added through the `add` method. See [`src/metrics.js`](./src/metrics.js) for more information about metrics. 
+The [`analysis`](./src/analysis.js) object can consist of many metrics, added through the `add` method. See [`src/metrics.js`](./src/metrics.js) for more information about metrics.
+
+Analysis can also be performed on individual requests to mark them passed or failed.
+
+```js
+myCrawler.on('analyze', function(crawlReport, analysis) {
+    var data = crawlReport.data;
+
+    data.forEach(function(request) {
+       var level = request.statusCode > 499 ? 2 : 0
+       analysis.addResult(request.url, level)
+    });
+})
+```
