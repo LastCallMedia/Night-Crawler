@@ -49,7 +49,7 @@
         "env",
         {
           "targets": {
-            "node": "6"
+            "node": "5"
           }
         }
       ],
@@ -63,5 +63,12 @@
     "parserOptions": {
       "ecmaVersion": 2017
     }
+  },
+  "jest": {
+    "collectCoverage": true,
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ]
   }
 }
