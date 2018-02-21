@@ -32,8 +32,8 @@ exports.builder = (yargs: yargs) => {
     describe: 'number of requests allowed in-flight at once',
     type: 'number',
     required: true,
-    default: 3,
-  })
+    default: 3
+  });
   yargs.option('silent', {
     alias: 'n',
     describe: 'silence all output',
@@ -56,7 +56,13 @@ exports.builder = (yargs: yargs) => {
   });
 };
 exports.handler = async function(argv: ArgVShape) {
-  const { crawlerfile, json = '', junit = '', concurrency = 3, stdout = process.stdout } = argv;
+  const {
+    crawlerfile,
+    json = '',
+    junit = '',
+    concurrency = 3,
+    stdout = process.stdout
+  } = argv;
   const crawler = requireCrawler(crawlerfile);
   const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
 

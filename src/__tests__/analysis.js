@@ -4,8 +4,8 @@ import { Number } from '../metrics';
 describe('Analysis', function() {
   var a;
   beforeEach(function() {
-    a = new Analysis('Test', new Date);
-  })
+    a = new Analysis('Test', new Date());
+  });
   it('Should collect metrics', function() {
     var n = new Number('Test', 0, 1);
     a.addMetric('test', n);
@@ -26,11 +26,11 @@ describe('Analysis', function() {
   });
 
   it('Should have a name', function() {
-    expect(a.label).toBe('Test')
-  })
+    expect(a.label).toBe('Test');
+  });
   it('Should have a date', function() {
-    expect(a.date).toBeInstanceOf(Date)
-  })
+    expect(a.date).toBeInstanceOf(Date);
+  });
 
   describe('hasFailures', function() {
     it('Should not have failures on an empty analysis', function() {

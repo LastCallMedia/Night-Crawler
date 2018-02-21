@@ -35,7 +35,7 @@ describe('Crawl Command', function() {
       expect(argv.crawlerfile).toEqual('./nightcrawler.js');
       expect(argv.json).toEqual('');
       expect(argv.junit).toEqual('');
-      expect(argv.concurrency).toEqual(3)
+      expect(argv.concurrency).toEqual(3);
     });
   });
   it('Passes silent', function() {
@@ -60,9 +60,9 @@ describe('Crawl Command', function() {
   });
   it('Passes concurrency', function() {
     return runWithHandler('crawl --concurrency 5', argv => {
-      expect(argv.concurrency).toBe(5)
-    })
-  })
+      expect(argv.concurrency).toBe(5);
+    });
+  });
 });
 
 describe('Crawl Handler', function() {
