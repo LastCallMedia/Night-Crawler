@@ -23,17 +23,17 @@ exports.builder = (yargs: yargs) => {
     type: 'boolean',
     default: false
   });
-  yargs.option('output', {
-    alias: 'o',
+  yargs.option('json', {
+    alias: 'j',
     describe: 'filename to write JSON report to'
   });
   yargs.option('junit', {
-    alias: 'j',
+    alias: 'u',
     describe: 'filename to write JUnit report to'
   });
 };
 exports.handler = async function(argv: Object) {
-  const { crawlerfile, output, junit, stdout = process.stdout } = argv;
+  const { crawlerfile, json, junit, stdout = process.stdout } = argv;
   const crawler = requireCrawler(crawlerfile);
   const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
 
@@ -45,8 +45,8 @@ exports.handler = async function(argv: Object) {
 
   stdout.write(new ConsoleFormatter().format(analysis) + EOL);
 
-  if (output) {
-    fs.writeFileSync(output, JSON.stringify(data), 'utf8');
+  if (json) {
+    fs.writeFileSync(json, JSON.stringify(data), 'utf8');
   }
 
   if (junit) {

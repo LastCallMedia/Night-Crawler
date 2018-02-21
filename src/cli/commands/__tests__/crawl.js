@@ -96,7 +96,7 @@ describe('Crawl Command', function() {
     const crawler = new Crawler('', new DummyDriver);
     return handler({
         crawlerfile: crawler,
-        output: filename
+        json: filename
     }).then(function() {
       expect(fs.existsSync(filename)).toEqual(true)
       fs.unlinkSync(filename)
