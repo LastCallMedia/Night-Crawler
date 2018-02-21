@@ -7,8 +7,8 @@ import type JUnitBuilder from 'junit-report-builder/src/builder';
 
 export default class JUnitFormatter implements Formatter {
   filename: string | null;
-  constructor(options: { filename?: string } = {}) {
-    this.filename = options.filename || null;
+  constructor(filename: string | null) {
+    this.filename = filename;
   }
   format(report: Analysis): ?string {
     var builder = new JUnitFactory().newBuilder();
@@ -32,7 +32,7 @@ export default class JUnitFormatter implements Formatter {
       let tc = suite
         .testCase()
         .className(name)
-        .name(metric.displayName || name)
+        .name(metric.displayName)
         .standardOutput(metric.toString());
       switch (metric.level) {
         case 2:

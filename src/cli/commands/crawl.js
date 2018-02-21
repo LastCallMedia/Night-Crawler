@@ -1,8 +1,9 @@
 // @flow
 
-import { requireCrawler, writeJSON } from '../util';
+import { requireCrawler } from '../util';
 import ora from 'ora';
 import { EOL } from 'os';
+import fs from 'fs'
 import { FailedAnalysisError } from '../errors';
 import ConsoleFormatter from '../formatters/console';
 import JUnitFormatter from '../formatters/junit';
@@ -45,7 +46,7 @@ exports.handler = async function(argv: Object) {
   stdout.write(new ConsoleFormatter().format(analysis) + EOL);
 
   if (output) {
-    writeJSON(output, data);
+    fs.writeFileSync(output, JSON.stringify(data), 'utf8');
   }
 
   if (junit) {

@@ -1,9 +1,14 @@
 import { handler } from '../crawl';
 import stream from 'stream';
+import os from 'os'
+import fs from 'fs'
 import Crawler from '../../../crawler';
 import DummyDriver from '../../../driver/dummy';
 import { Number } from '../../../metrics';
 import { FailedAnalysisError } from '../../errors';
+import JUnitFormatter from '../../formatters/junit';
+
+jest.mock('../../formatters/junit')
 
 describe('Crawl Command', function() {
   it('Executes the crawl', function() {
@@ -70,5 +75,31 @@ describe('Crawl Command', function() {
       .then(function() {
         expect(called).toEqual(1);
       });
+  });
+
+  it('Should save a junit report if requested', function() {
+      var filename = `${os.tmpdir()}/nightcrawler-${Math.floor((Math.random() * 10000))}`;
+      const crawler = new Crawler('', new DummyDriver);
+
+      return handler({
+          crawlerfile: crawler,
+          junit: filename
+      })
+      .then(function() {
+        expect(JUnitFormatter).toHaveBeenCalledTimes(1)
+        expect(JUnitFormatter.mock.calls[0]).toEqual([filename])
+      })
+  });
+
+  it('Should save a valid JSON run report if requested', function() {
+    var filename = `${os.tmpdir()}/nightcrawler-${Math.floor((Math.random() * 10000))}`;
+    const crawler = new Crawler('', new DummyDriver);
+    return handler({
+        crawlerfile: crawler,
+        output: filename
+    }).then(function() {
+      expect(fs.existsSync(filename)).toEqual(true)
+      fs.unlinkSync(filename)
+    })
   });
 });
