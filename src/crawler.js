@@ -117,7 +117,7 @@ class Crawler extends EventEmitter {
     crawlRequest: CrawlRequest,
     err: Error
   ): Promise<CrawlResponse> {
-    error(`Error on ${crawlRequest.url}`);
+    error(`Error on ${crawlRequest.url}: ${err.message}`);
     let collected = Object.assign(crawlRequest, { error: true });
     await this.emit('response.error', err, collected);
     return collected;
