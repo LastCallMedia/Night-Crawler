@@ -1,8 +1,8 @@
 import JUnitFormatter from '../junit';
 import Analysis from '../../../analysis';
 import { Number } from '../../../metrics';
-import fs from 'fs'
-import os from 'os'
+import fs from 'fs';
+import os from 'os';
 
 describe('JUnit formatter', function() {
   it('Should output a listing of results', function() {
@@ -20,10 +20,12 @@ describe('JUnit formatter', function() {
     expect(new JUnitFormatter().format(a)).toMatchSnapshot();
   });
   it('Should output to a file', function() {
-      var filename = `${os.tmpdir()}/nightcrawler-${Math.floor((Math.random() * 10000))}`;
+    var filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
+      Math.random() * 10000
+    )}`;
     var a = new Analysis('test', new Date());
     new JUnitFormatter(filename).format(a);
-    expect(fs.existsSync(filename)).toEqual(true)
-    fs.unlinkSync(filename)
+    expect(fs.existsSync(filename)).toEqual(true);
+    fs.unlinkSync(filename);
   });
 });

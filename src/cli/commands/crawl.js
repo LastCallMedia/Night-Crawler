@@ -3,19 +3,28 @@
 import { requireCrawler } from '../util';
 import ora from 'ora';
 import { EOL } from 'os';
-import fs from 'fs'
+import fs from 'fs';
 import { FailedAnalysisError } from '../errors';
 import ConsoleFormatter from '../formatters/console';
 import JUnitFormatter from '../formatters/junit';
 import type yargs from 'yargs';
 import type Crawler from '../../crawler';
 
+type ArgVShape = {
+  crawlerfile: string,
+  json: string,
+  junit: string,
+  stdout: Object
+};
+
 exports.command = 'crawl [crawlerfile]';
 exports.describe = 'execute the crawl defined in the active config file';
 exports.builder = (yargs: yargs) => {
   yargs.positional('crawlerfile', {
     describe: 'the name of the crawler file',
-    default: 'nightcrawler.js'
+    default: './nightcrawler.js',
+    type: 'string',
+    normalize: true
   });
   yargs.option('silent', {
     alias: 'n',
@@ -25,15 +34,21 @@ exports.builder = (yargs: yargs) => {
   });
   yargs.option('json', {
     alias: 'j',
-    describe: 'filename to write JSON report to'
+    describe: 'filename to write JSON report to',
+    normalize: true,
+    type: 'string',
+    default: ''
   });
   yargs.option('junit', {
     alias: 'u',
-    describe: 'filename to write JUnit report to'
+    describe: 'filename to write JUnit report to',
+    normalize: true,
+    type: 'string',
+    default: ''
   });
 };
-exports.handler = async function(argv: Object) {
-  const { crawlerfile, json, junit, stdout = process.stdout } = argv;
+exports.handler = async function(argv: ArgVShape) {
+  const { crawlerfile, json = '', junit = '', stdout = process.stdout } = argv;
   const crawler = requireCrawler(crawlerfile);
   const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
 
@@ -45,11 +60,11 @@ exports.handler = async function(argv: Object) {
 
   stdout.write(new ConsoleFormatter().format(analysis) + EOL);
 
-  if (json) {
+  if (json.length) {
     fs.writeFileSync(json, JSON.stringify(data), 'utf8');
   }
 
-  if (junit) {
+  if (junit.length) {
     new JUnitFormatter(junit).format(analysis);
   }
 

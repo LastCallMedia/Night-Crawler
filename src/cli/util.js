@@ -6,13 +6,13 @@ import Crawler from '../crawler';
 import strip from 'strip-ansi';
 
 export function requireCrawler(file: string | Crawler): Crawler {
-  // Allow full crawler instances to be passed in during testing.
-  if (file instanceof Crawler) {
-    return file;
+  if (typeof file === 'string') {
+    var resolved = path.resolve(process.cwd(), file);
+    // $FlowFixMe
+    return require(resolved);
   }
-  var resolved = path.resolve(process.cwd(), file);
-  // $FlowFixMe
-  return require(resolved);
+  // Allow full crawler instances to be passed in during testing.
+  return file;
 }
 
 export function consoleDisplayValue(level: number, value: string) {
