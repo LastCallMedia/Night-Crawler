@@ -7,9 +7,16 @@ import DummyDriver from '../../../driver/dummy';
 import { Number } from '../../../metrics';
 import { FailedAnalysisError } from '../../errors';
 import JUnitFormatter from '../../formatters/junit';
+import formatConsole from '../../formatters/console';
 import yargs from 'yargs';
 
 jest.mock('../../formatters/junit');
+jest.mock('../../formatters/console', () => {
+  return jest.fn(
+    (_, opts) =>
+      `CONSOLE_ANALYSIS:${opts.minLevel}${opts.color ? ':color' : ''}`
+  );
+});
 
 function runWithHandler(argv, handler) {
   let invoked = 0;
@@ -66,6 +73,11 @@ describe('Crawl Command', function() {
 });
 
 describe('Crawl Handler', function() {
+  var stdout;
+  beforeEach(function() {
+    stdout = new stream.PassThrough();
+  });
+
   it('Executes the crawl', function() {
     let called = 0;
     const crawler = new Crawler();
@@ -73,15 +85,13 @@ describe('Crawl Handler', function() {
 
     return handler({
       crawlerfile: crawler,
-      stdout: new stream.PassThrough()
+      stdout
     }).then(function() {
       expect(called).toEqual(1);
     });
   });
 
   it('Displays output to indicate the success of the crawl', function() {
-    var stdout = new stream.PassThrough();
-
     const crawler = new Crawler('', new DummyDriver());
     crawler.on('setup', () => {
       crawler.enqueue('http://example.com/');
@@ -92,23 +102,19 @@ describe('Crawl Handler', function() {
       crawlerfile: crawler,
       stdout
     }).then(function() {
-      expect(stdout.read().toString()).toMatchSnapshot();
+      var output = stdout.read().toString();
+      expect(output).toMatch('Setup\nCrawl\nAnalyze\n');
     });
   });
 
-  it('Outputs analysis at the end of the crawl if requested', function() {
-    var stdout = new stream.PassThrough();
-
+  it('Outputs analysis at the end of the crawl if the output is not silent', function() {
     const crawler = new Crawler('', new DummyDriver());
-    crawler.on('analyze', function(r, a) {
-      a.addMetric('foo', new Number('MyTestMetric', 0, 1));
-    });
 
     return handler({
       crawlerfile: crawler,
       stdout
     }).then(function() {
-      expect(stdout.read().toString()).toContain('MyTestMetric');
+      expect(stdout.read().toString()).toContain('CONSOLE_ANALYSIS:1:color');
     });
   });
 
@@ -120,7 +126,7 @@ describe('Crawl Handler', function() {
 
     const p = handler({
       crawlerfile: crawler,
-      stdout: new stream.PassThrough()
+      stdout
     });
     return expect(p).rejects.toBeInstanceOf(FailedAnalysisError);
   });
@@ -131,7 +137,7 @@ describe('Crawl Handler', function() {
     };
     const p = handler({
       crawlerfile: crawler,
-      stdout: new stream.PassThrough()
+      stdout
     });
     return expect(p).rejects.toBe('Oh no!');
   });
@@ -145,7 +151,7 @@ describe('Crawl Handler', function() {
     return handler({
       crawlerfile: crawler,
       junit: filename,
-      stdout: new stream.PassThrough()
+      stdout
     }).then(function() {
       expect(JUnitFormatter).toHaveBeenCalledTimes(1);
       expect(JUnitFormatter.mock.calls[0]).toEqual([filename]);
@@ -160,7 +166,7 @@ describe('Crawl Handler', function() {
     return handler({
       crawlerfile: crawler,
       json: filename,
-      stdout: new stream.PassThrough()
+      stdout
     }).then(function() {
       expect(fs.existsSync(filename)).toEqual(true);
       fs.unlinkSync(filename);

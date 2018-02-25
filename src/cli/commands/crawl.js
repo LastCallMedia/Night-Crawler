@@ -5,7 +5,7 @@ import ora from 'ora';
 import { EOL } from 'os';
 import fs from 'fs';
 import { FailedAnalysisError } from '../errors';
-import ConsoleFormatter from '../formatters/console';
+import formatConsole from '../formatters/console';
 import JUnitFormatter from '../formatters/junit';
 import type yargs from 'yargs';
 import type Crawler from '../../crawler';
@@ -72,7 +72,7 @@ exports.handler = async function(argv: ArgVShape) {
 
   const analysis = await spunCrawler.analyze(data);
 
-  stdout.write(new ConsoleFormatter().format(analysis) + EOL);
+  stdout.write(formatConsole(analysis, { color: true, minLevel: 1 }) + EOL);
 
   if (json.length) {
     fs.writeFileSync(json, JSON.stringify(data), 'utf8');
