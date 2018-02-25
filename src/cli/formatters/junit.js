@@ -1,7 +1,6 @@
 // @flow
 
 import JUnitFactory from 'junit-report-builder/src/factory';
-import type Formatter from './types';
 import type Analysis from '../../analysis';
 import type JUnitBuilder from 'junit-report-builder/src/builder';
 

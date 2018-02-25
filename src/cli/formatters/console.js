@@ -2,7 +2,6 @@
 
 import { consoleDisplayValue, stringLength } from '../util';
 import table from 'markdown-table';
-import type Formatter from './types';
 import type Analysis from '../../analysis';
 
 type Options = {

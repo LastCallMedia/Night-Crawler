@@ -1,8 +1,15 @@
 // @flow
-var crawler = require('./crawler');
-crawler.drivers = {
-  request: require('./driver/request')
-};
-crawler.metrics = require('./metrics');
+import Crawler from './crawler'
+import RequestDriver from './driver/request'
+import {Number, Milliseconds, Percent} from './metrics'
 
-module.exports = crawler;
+Crawler.drivers = {
+  request: RequestDriver
+}
+Crawler.metrics = {
+  Number,
+  Milliseconds,
+    Percent
+}
+
+module.exports = Crawler;
