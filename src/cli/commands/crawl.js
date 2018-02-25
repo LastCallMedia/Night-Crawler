@@ -6,7 +6,7 @@ import { EOL } from 'os';
 import fs from 'fs';
 import { FailedAnalysisError } from '../errors';
 import formatConsole from '../formatters/console';
-import JUnitFormatter from '../formatters/junit';
+import formatJUnit from '../formatters/junit';
 import type yargs from 'yargs';
 import type Crawler from '../../crawler';
 
@@ -79,7 +79,7 @@ exports.handler = async function(argv: ArgVShape) {
   }
 
   if (junit.length) {
-    new JUnitFormatter(junit).format(analysis);
+    formatJUnit(analysis, { filename: junit });
   }
 
   if (analysis.hasFailures()) {

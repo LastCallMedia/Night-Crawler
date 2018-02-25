@@ -6,8 +6,9 @@ import Crawler from '../../../crawler';
 import DummyDriver from '../../../driver/dummy';
 import { Number } from '../../../metrics';
 import { FailedAnalysisError } from '../../errors';
-import JUnitFormatter from '../../formatters/junit';
+import formatJUnit from '../../formatters/junit';
 import formatConsole from '../../formatters/console';
+import Analysis from '../../../analysis';
 import yargs from 'yargs';
 
 jest.mock('../../formatters/junit');
@@ -143,9 +144,7 @@ describe('Crawl Handler', function() {
   });
 
   it('Should save a junit report if requested', function() {
-    var filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
-      Math.random() * 10000
-    )}`;
+    var filename = 'foo';
     const crawler = new Crawler('', new DummyDriver());
 
     return handler({
@@ -153,8 +152,9 @@ describe('Crawl Handler', function() {
       junit: filename,
       stdout
     }).then(function() {
-      expect(JUnitFormatter).toHaveBeenCalledTimes(1);
-      expect(JUnitFormatter.mock.calls[0]).toEqual([filename]);
+      expect(formatJUnit).toHaveBeenCalledTimes(1);
+      expect(formatJUnit.mock.calls[0][0]).toBeInstanceOf(Analysis);
+      expect(formatJUnit.mock.calls[0][1]).toEqual({ filename: 'foo' });
     });
   });
 

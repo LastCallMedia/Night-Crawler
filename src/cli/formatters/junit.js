@@ -5,30 +5,51 @@ import type Formatter from './types';
 import type Analysis from '../../analysis';
 import type JUnitBuilder from 'junit-report-builder/src/builder';
 
-export default class JUnitFormatter implements Formatter {
-  filename: string | null;
-  constructor(filename: string | null) {
-    this.filename = filename;
-  }
-  format(report: Analysis): ?string {
-    var builder = new JUnitFactory().newBuilder();
+type Options = {
+  filename?: string
+};
 
-    if (report.metrics.size) {
-      this.buildAggregates(report, builder);
-    }
-    if (report.results.length) {
-      this.buildResults(report, builder);
-    }
+type Metrics = $PropertyType<Analysis, 'metrics'>;
+type Results = $PropertyType<Analysis, 'results'>;
 
-    if (this.filename) {
-      builder.writeTo(this.filename);
-    } else {
-      return builder.build();
-    }
+export default function formatJUnit(analysis: Analysis, options: Options = {}) {
+  var builder = new JUnitFactory().newBuilder();
+
+  buildMetrics(analysis.metrics, builder);
+
+  buildResults(analysis.results, builder);
+
+  if (options.filename) {
+    builder.writeTo(options.filename);
+  } else {
+    return builder.build();
   }
-  buildAggregates(analysis: Analysis, builder: JUnitBuilder) {
+}
+
+function buildResults(results: Results, builder: JUnitBuilder) {
+  if (results.length) {
+    const suite = builder.testSuite().name(`Results`);
+    results.forEach(res => {
+      let tc = suite
+        .testCase()
+        .className(res.url)
+        .time(res.time / 1000);
+      switch (res.level) {
+        case 2:
+          tc.failure(res.message);
+          break;
+        case 1:
+          tc.error(res.message);
+          break;
+      }
+    });
+  }
+}
+
+function buildMetrics(metrics: Metrics, builder: JUnitBuilder) {
+  if (metrics.size) {
     const suite = builder.testSuite().name(`Aggregates`);
-    analysis.metrics.forEach((metric, name) => {
+    metrics.forEach((metric, name) => {
       let tc = suite
         .testCase()
         .className(name)
@@ -40,23 +61,6 @@ export default class JUnitFormatter implements Formatter {
           break;
         case 1:
           tc.error();
-          break;
-      }
-    });
-  }
-  buildResults(analysis: Analysis, builder: JUnitBuilder) {
-    const suite = builder.testSuite().name(`Results`);
-    analysis.results.forEach(res => {
-      let tc = suite
-        .testCase()
-        .className(res.url)
-        .time(res.time / 1000);
-      switch (res.level) {
-        case 2:
-          tc.failure(res.message);
-          break;
-        case 1:
-          tc.error(res.message);
           break;
       }
     });
