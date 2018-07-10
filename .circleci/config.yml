@@ -9,7 +9,7 @@ jobs:
       - run: npm install
       - run:
           name: "ESLint"
-          command: node_modules/.bin/eslint --format junit -o /tmp/junit/eslint.xml
+          command: node_modules/.bin/eslint . --format junit -o /tmp/junit/eslint.xml
       - run:
           name: "Flow"
           command: node_modules/.bin/flow

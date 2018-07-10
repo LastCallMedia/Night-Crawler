@@ -1,3 +1,5 @@
+// @flow
+
 import type { Driver, CrawlRequest } from '../types';
 
 /**
