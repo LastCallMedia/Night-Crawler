@@ -1,6 +1,5 @@
 // @flow
 
-import { requireCrawler } from '../util';
 import ora from 'ora';
 import { EOL } from 'os';
 import fs from 'fs';
@@ -11,7 +10,6 @@ import type yargs from 'yargs';
 import type Crawler from '../../crawler';
 
 type ArgVShape = {
-  crawlerfile: string,
   json: string,
   junit: string,
   stdout: Object,
@@ -21,12 +19,6 @@ type ArgVShape = {
 exports.command = 'crawl [crawlerfile]';
 exports.describe = 'execute the crawl defined in the active config file';
 exports.builder = (yargs: yargs) => {
-  yargs.positional('crawlerfile', {
-    describe: 'the name of the crawler file',
-    default: './nightcrawler.js',
-    type: 'string',
-    normalize: true
-  });
   yargs.option('concurrency', {
     alias: 'c',
     describe: 'number of requests allowed in-flight at once',
@@ -55,15 +47,13 @@ exports.builder = (yargs: yargs) => {
     default: ''
   });
 };
-exports.handler = async function(argv: ArgVShape) {
+exports.handler = async function(argv: ArgVShape, crawler: Crawler) {
   const {
-    crawlerfile,
     json = '',
     junit = '',
     concurrency = 3,
     stdout = process.stdout
   } = argv;
-  const crawler = requireCrawler(crawlerfile);
   const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
 
   await spunCrawler.setup();
