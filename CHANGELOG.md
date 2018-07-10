@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Changed
+- Updated yargs to 12.0.1.
+- Moved crawlerfile to a `--config` flag that is required for all commands.
 - Updated Ora to 2.0.0.
 
 ## [1.0.1] - 2018-02-25
