@@ -14,8 +14,8 @@ export default class ConsoleComparisonFormatter implements ComparisonFormatter {
     }
     return consoleDisplayValue(1, 'No Results');
   }
-  buildHeader(reports: Array<Analysis>) {
-    const reportHeaders = reports.map((report, i) => {
+  buildHeader(reports: Array<Analysis>): Array<string> {
+    const reportHeaders = reports.map((report, i): string => {
       return `Report #${i + 1}`;
     });
     return ['Name'].concat(reportHeaders);
