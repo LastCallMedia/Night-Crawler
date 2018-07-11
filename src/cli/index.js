@@ -3,8 +3,10 @@ import { requireCrawler } from './util';
 
 yargs.option('config').default('config', './nightcrawler.js');
 
+let crawler;
+
 try {
-  const crawler = requireCrawler(yargs.argv.config);
+  crawler = requireCrawler(yargs.argv.config);
 } catch (e) {
   throw new Error(`Unable to load crawler from ${yargs.argv.config}`);
 }
