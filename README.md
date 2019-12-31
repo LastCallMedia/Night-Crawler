@@ -1,7 +1,6 @@
 ![Nightcrawler](docs/logo.png)
 ============
 
-
 Nightcrawler is a simple NodeJS webcrawler that fetches URLs and aggregates data about the responses it receives.  It is designed to support daily metric collection and assertions about those metrics for websites.  The canonical use case is in testing a development version of a website for errors and backend response time on a nightly basis.
 
 Getting Started
