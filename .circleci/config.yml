@@ -1,9 +1,9 @@
 version: 2
 jobs:
   test:
-    working_directory: /home/circleci
+    working_directory: /srv
     docker:
-      - image: circleci/node:9.0.0
+      - image: node:8
     steps:
       - checkout
       - run: npm install
@@ -27,9 +27,9 @@ jobs:
             - dist
 
   publish:
-    working_directory: /home/circleci
+    working_directory: /srv
     docker:
-      - image: circleci/node:9.0.0
+      - image: node:8
     steps:
       - checkout
       - run: npm install
