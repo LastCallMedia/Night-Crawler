@@ -26,7 +26,7 @@ myCrawler.on('setup', function(crawler) {
 myCrawler.on('analyze', function(crawlReport, analysis) {
     // On analysis, derive the metrics you need from the
     // array of collected data.
-    analysis.add('count', new Number('Total Requests', 0, crawlReport.data.length));
+    analysis.addMetric('count', new Number('Total Requests', 0, crawlReport.data.length));
 });
 
 module.exports = myCrawler;
@@ -34,7 +34,7 @@ module.exports = myCrawler;
 Run your crawler:
 ```bash
 # Run the crawler.
-node_modules/.bin/nightcrawler run
+node_modules/.bin/nightcrawler crawl
 ```
 
 Queueing Requests
@@ -58,7 +58,7 @@ myCrawler.on('analyze', function(crawlReport, analysis) {
         return point.group === 'awesome';
     });
     // Do additional analysis only on pages in the awesome group.
-    analysis.add('awesome.count', new Number('Awesome Requests', 0, awesomeRequests.length));
+    analysis.addMetric('awesome.count', new Number('Awesome Requests', 0, awesomeRequests.length));
 })
 ```
 
@@ -109,20 +109,20 @@ myCrawler.on('analyze', function(crawlReport, analysis) {
     var data = crawlReport.data;
     
     // Calculate the number of requests that were made:
-    analysis.add('count', new Number('Total Requests', 0, data.length));
+    analysis.addMetric('count', new Number('Total Requests', 0, data.length));
     
     // Calculate the average response time:
     var avgTime = data.reduce(function(sum, dataPoint) {
         return sum + dataPoint.backendTime
     }, 0) / data.length;
-    analysis.add('time', new Milliseconds('Avg Response Time', 0, avgTime));
+    analysis.addMetric('time', new Milliseconds('Avg Response Time', 0, avgTime));
     
     // Calculate the percent of requests that were marked failed:
     var failRatio = data.filter(function(dataPoint) {
         return dataPoint.fail === true;
     }).length / data.length;
     var level = failRatio > 0 ? 2 : 0;
-    analysis.add('fail', new Percent('% Failed', level, failRatio));
+    analysis.addMetric('fail', new Percent('% Failed', level, failRatio));
     
     // Calculate the percent of requests that resulted in a 500 response.
     var serverErrorRatio = data.filter(function(dataPoint) {
@@ -147,6 +147,16 @@ myCrawler.on('analyze', function(crawlReport, analysis) {
 })
 ```
 
+CI Setup
+--------
+To add Nightcrawler to CircleCI make sure to the following steps are done:
+
+In the build job add the following command `run: {name: "Yarn install", command: "yarn install --pure-lockfile" }`
+
+Within another job or on it own run the following command `- run: {name: 'Nightcrawler', command: 'node_modules/.bin/nightcrawler crawl --json /tmp/artifacts/results.json --junit /tmp/junit/crawler.xml'}`. This will actually run Nightcrawler in CircleCI and output the results in JSON and XML file in the artifacts directory.
+
+Add the job to a workflow to have Nightcrawler run against that branch. 
+
 Attribution/Thanks
 ------------------
-This project is an independent effort of Last Call Media, but it was born out of a need discovered while working on the [Mass.gov](https://www.mass.gov) project.  In particular, we'd like to thank members of the Platform Support team: Ian Sholtys for coming up with arguably the best name in software, Youssef Riahi for serving as a sounding board and a source of ideas, and Jessie Biroscak for encouraging development.
+This project is an independent effort of Last Call Media, but it was born out of a need discovered while working on the [Mass.gov](https://www.mass.gov) project.  In particular, we'd like to thank members of the Platform Support team: Ian Sholtys for coming up with arguably the best name in software, Youssef Riahi for serving as a sounding board and a source of ideas, and Jessie Biroscak for encouraging development. See how Nightcrawler is being used by [Mass.gov](https://github.com/massgov/openmass/tree/develop/.circleci/nightcrawler).
