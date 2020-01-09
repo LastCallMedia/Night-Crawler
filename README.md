@@ -147,6 +147,16 @@ myCrawler.on('analyze', function(crawlReport, analysis) {
 })
 ```
 
+CI Setup
+--------
+To add Nightcrawler to CircleCI make sure to the following steps are done:
+
+In the build job add the following command `run: {name: "Yarn install", command: "yarn install --pure-lockfile" }`
+
+Within another job or on it own run the following command `- run: {name: 'Nightcrawler', command: 'node_modules/.bin/nightcrawler crawl --json /tmp/artifacts/results.json --junit /tmp/junit/crawler.xml'}`. This will actually run Nightcrawler in CircleCI and output the results in JSON and XML file in the artifacts directory.
+
+Add the job to a workflow to have Nightcrawler run against that branch. 
+
 Attribution/Thanks
 ------------------
 This project is an independent effort of Last Call Media, but it was born out of a need discovered while working on the [Mass.gov](https://www.mass.gov) project.  In particular, we'd like to thank members of the Platform Support team: Ian Sholtys for coming up with arguably the best name in software, Youssef Riahi for serving as a sounding board and a source of ideas, and Jessie Biroscak for encouraging development. See how Nightcrawler is being used by [Mass.gov](https://github.com/massgov/openmass/tree/develop/.circleci/nightcrawler).
