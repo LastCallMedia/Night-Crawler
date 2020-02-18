@@ -22,6 +22,13 @@ describe('Crawler', () => {
         expect(cb.mock.calls).toEqual([[c]]);
       });
   });
+  it('Should throw an error when setup throws an error', async function() {
+    const c = new Crawler();
+    c.on('setup', function() {
+      return Promise.reject('reason');
+    })
+    await expect(c.setup()).rejects.toEqual('Setup failed with an error: reason');
+  })
 
   describe('Enqueue', function() {
     it('Should normalize requests that are added to the queue', function() {
@@ -106,13 +113,42 @@ describe('Crawler', () => {
 
     it('Should collect data added through the response.success event', function() {
       return new Crawler('', new DummyDriver())
-        .on('setup', c => c.enqueue('http://example.com/success'))
+        .on('setup', x => x.enqueue('http://example.com/success'))
         .on('response.success', function(response, data) {
           data.touched = 1;
         })
         .crawl()
-        .then(({ data }) => expect(data[0].touched).toEqual(1));
+        .then(({ data }) => {
+          expect(data[0].touched).toEqual(1)
+        });
     });
+
+    it('Should bubble up errors thrown during processing of response.success', async function() {
+      const success = jest.fn(() => {
+        throw new Error('test');
+      })
+      const fail = jest.fn();
+      const c = new Crawler('', new DummyDriver());
+      c.on('setup', x => x.enqueue('http://example.com/success'))
+      c.on('response.success', success);
+      c.on('response.error', fail);
+      await expect(c.crawl()).rejects.toEqual('An error was caught during processing of a successful result: Error: test')
+      // Make sure we haven't also invoked the error handler.
+      expect(fail.mock.calls.length).toEqual(0);
+    });
+
+    it('Should bubble up errors thrown during processing of response.success', async function() {
+      const success = jest.fn();
+      const fail = jest.fn(() => {
+        throw new Error('test');
+      });
+      const c = new Crawler('', new DummyDriver());
+      c.on('setup', x => x.enqueue({url: 'http://example.com/fail', shouldFail: true}))
+      c.on('response.error', fail);
+      c.on('response.success', success);
+      await expect(c.crawl()).rejects.toEqual('An error was caught during processing of a failure result: Error: test');
+      expect(success.mock.calls.length).toEqual(0);
+    })
   });
 
   describe('Analyze', function() {

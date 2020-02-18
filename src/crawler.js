@@ -38,7 +38,13 @@ class Crawler extends EventEmitter {
     log(`Starting setup`);
     // Always reset the queue before beginning.
     this.queue = [];
-    return this.emit('setup', this);
+    try {
+      await this.emit({catch: true}, 'setup', this);
+      return;
+    }
+    catch(e) {
+      return Promise.reject(`Setup failed with an error: ${e.toString()}`)
+    }
   }
 
   /**
@@ -75,11 +81,26 @@ class Crawler extends EventEmitter {
    */
   async _fetch(req: CrawlRequest): Promise<CrawlResponse> {
     log(`Fetching ${req.url}`);
+    let res;
 
-    return this.driver
-      .fetch(req)
-      .then(res => this._collectSuccess(req, res))
-      .catch(res => this._collectError(req, res));
+    try {
+      res = await this.driver.fetch(req);
+    }
+    catch(err) {
+      try {
+        return await this._collectError(req, err);
+      }
+      catch(err) {
+        return Promise.reject(`An error was caught during processing of a failure result: ${err.toString()}`);
+      }
+    }
+
+    try {
+      return await this._collectSuccess(req, res);
+    }
+    catch(err) {
+      return Promise.reject(`An error was caught during processing of a successful result: ${err.toString()}`)
+    }
   }
 
   /**
@@ -116,7 +137,7 @@ class Crawler extends EventEmitter {
     crawlRequest: CrawlRequest,
     err: Error
   ): Promise<CrawlResponse> {
-    error(`Error on ${crawlRequest.url}: ${err.message}`);
+    error(`Error on ${crawlRequest.url}: ${err.toString()}`);
     let collected = Object.assign(crawlRequest, { error: true });
     await this.emit('response.error', err, collected);
     return collected;
