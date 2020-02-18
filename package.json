@@ -72,6 +72,7 @@
     }
   },
   "jest": {
+    "collectCoverage": true,
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/"
