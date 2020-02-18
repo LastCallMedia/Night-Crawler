@@ -1,7 +1,7 @@
 // @flow
 
 const Promise = require('bluebird');
-const EventEmitter = require('events-async');
+const EventEmitter = require('promise-events');
 const log = require('debug')('nightcrawler:info');
 const error = require('debug')('nightcrawler:error');
 import Analysis from './analysis';
