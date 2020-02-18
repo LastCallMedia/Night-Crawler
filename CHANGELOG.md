@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Errors during response.success or response.error will now cause the overall crawl to fail, as this indicates a problem with the invoking code. 
 
+### Deprecated
+- Dropped Node 6 support.
+
 ## [1.1.1] - 2018-07-11
 
 ### Fixed
