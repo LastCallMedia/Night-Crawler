@@ -1,6 +1,6 @@
 // @flow
 
-import type { Metric } from './metrics';
+import { Metric } from './metrics';
 
 export type AnalyzedResult = {
   url: string,

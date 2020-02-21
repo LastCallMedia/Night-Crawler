@@ -2,9 +2,9 @@
 
 import table from 'markdown-table';
 import { consoleDisplayValue, stringLength } from '../util';
-import type { ComparisonFormatter } from './types';
-import type Analysis from '../../analysis';
-import type { Metric } from '../../metrics';
+import { ComparisonFormatter } from './types';
+import Analysis from '../../analysis';
+import { Metric } from '../../metrics';
 
 export default class ConsoleComparisonFormatter implements ComparisonFormatter {
   format(reports: Array<Analysis>): string {

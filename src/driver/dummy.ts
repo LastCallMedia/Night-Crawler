@@ -1,6 +1,6 @@
 // @flow
 
-import type { Driver, CrawlRequest } from '../types';
+import { Driver, CrawlRequest } from '../types';
 
 /**
  * Dummy driver for use in testing.

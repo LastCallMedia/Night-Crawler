@@ -1,14 +1,13 @@
-// @flow
 
 export type CrawlRequest = {
   url: string,
-  [string]: any
+  [key: string]: any
 };
 
 export type CrawlResponse = {
   url: string,
   err: boolean,
-  [string]: any
+  [key: string]: any
 };
 
 export type CrawlReport = {

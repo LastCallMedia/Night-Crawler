@@ -1,15 +1,21 @@
 // @flow
 
-const Promise = require('bluebird');
-const EventEmitter = require('events-async');
-const log = require('debug')('nightcrawler:info');
-const error = require('debug')('nightcrawler:error');
+import bb from 'bluebird';
+import EventEmitter from 'events-async';
+import debug from 'debug';
 import Analysis from './analysis';
 import RequestDriver from './driver/request';
 
-import type { Driver, CrawlRequest, CrawlResponse, CrawlReport } from './types';
+const log = debug('nightcrawler:info');
+const error = debug('nightcrawler:error');
 
-class Crawler extends EventEmitter {
+
+import { Driver, CrawlRequest, CrawlResponse, CrawlReport } from './types';
+
+export default class Crawler extends EventEmitter {
+  name: string
+  queue: []
+  driver: Driver
   constructor(name: string, driver: Driver = new RequestDriver()) {
     super();
     this.name = name;
@@ -69,7 +75,7 @@ class Crawler extends EventEmitter {
     return {
       name: this.name,
       date: new Date(),
-      data: await Promise.map(this.queue, doOne, { concurrency })
+      data: await bb.map(this.queue, doOne, { concurrency })
     };
   }
 
@@ -159,4 +165,3 @@ function normalizeRequest(request: CrawlRequest | string) {
   return request;
 }
 
-module.exports = Crawler;

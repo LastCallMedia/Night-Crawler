@@ -8,7 +8,6 @@ import strip from 'strip-ansi';
 export function requireCrawler(file: string | Crawler): Crawler {
   if (typeof file === 'string') {
     var resolved = path.resolve(process.cwd(), file);
-    // $FlowFixMe
     return require(resolved);
   }
   // Allow full crawler instances to be passed in during testing.

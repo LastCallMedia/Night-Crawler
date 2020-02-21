@@ -1,24 +1,28 @@
 // @flow
 
+import stream from 'stream'
 import ora from 'ora';
 import { EOL } from 'os';
 import fs from 'fs';
 import { FailedAnalysisError } from '../errors';
 import formatConsole from '../formatters/console';
 import formatJUnit from '../formatters/junit';
-import type yargs from 'yargs';
-import type Crawler from '../../crawler';
+import {BuilderCallback} from 'yargs';
+import Crawler from '../../crawler';
+import {ConfigArgs} from "../index";
+import {CrawlReport} from "../../types";
 
-type ArgVShape = {
-  json: string,
-  junit: string,
-  stdout: Object,
-  concurrency: number
-};
+export interface CrawlCommandArgs extends ConfigArgs {
+  concurrency?: number
+  silent?: boolean,
+  json?: string
+  junit?: string
+  stdout?: stream.Writable // NodeJS.WriteStream
+}
 
-exports.command = 'crawl [crawlerfile]';
-exports.describe = 'execute the crawl defined in the active config file';
-exports.builder = (yargs: yargs) => {
+export const command = 'crawl [crawlerfile]';
+export const describe = 'execute the crawl defined in the active config file';
+export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = (yargs) => {
   yargs.option('concurrency', {
     alias: 'c',
     describe: 'number of requests allowed in-flight at once',
@@ -47,8 +51,9 @@ exports.builder = (yargs: yargs) => {
     default: ''
   });
 };
-exports.handler = async function(argv: ArgVShape, crawler: Crawler) {
+export const handler = async function(argv: CrawlCommandArgs) {
   const {
+    crawler,
     json = '',
     junit = '',
     concurrency = 3,
@@ -79,72 +84,40 @@ exports.handler = async function(argv: ArgVShape, crawler: Crawler) {
 
 class CrawlerSpinnerDecorator {
   inner: Crawler;
-  stream: Object;
-  constructor(inner: Crawler, stream) {
+  stream: stream.Writable;
+  constructor(inner: Crawler, stream: stream.Writable) {
     this.inner = inner;
     this.stream = stream;
   }
   setup() {
-    let spinner = ora({
-      stream: this.stream
-    }).start('Setup');
-    // Handle non-TTY by giving some output
-    if (!spinner.enabled) {
-      this.stream.write(`Setup${EOL}`);
-    }
-    return this.inner
-      .setup()
-      .then(res => {
-        spinner.succeed('Setup');
-        return res;
-      })
-      .catch(res => {
-        spinner.fail('Setup');
-        return Promise.reject(res);
-      });
+    const promise = this.inner.setup();
+    ora.promise(promise, {
+      stream: this.stream,
+      text: 'Setup',
+    })
+    return promise
   }
-  work(concurrency) {
-    let spinner = ora({
-      stream: this.stream
-    }).start('Crawl');
-    // Handle non-TTY by giving some output
-    if (!spinner.enabled) {
-      this.stream.write(`Crawl${EOL}`);
-    }
+  work(concurrency: number) {
+    const promise = this.inner.work(concurrency);
+    const spinner = ora.promise(promise, {
+      stream: this.stream,
+      text: 'Calculating...',
+      prefixText: 'Crawling',
+    })
+
     let done = 0;
     let tick = () => {
       spinner.text = `Crawled ${++done} of ${this.inner.queue.length}`;
     };
     this.inner.on('response.success', tick).on('response.error', tick);
-
-    return this.inner
-      .work(concurrency)
-      .then(res => {
-        spinner.succeed('Crawl');
-        return res;
-      })
-      .catch(res => {
-        spinner.fail('Crawl');
-        return Promise.reject(res);
-      });
+    return promise;
   }
-  analyze(data) {
-    let spinner = ora({
-      stream: this.stream
-    }).start('Analyze');
-    // Handle non-TTY by giving some output
-    if (!spinner.enabled) {
-      this.stream.write(`Analyze${EOL}`);
-    }
-    return this.inner
-      .analyze(data)
-      .then(res => {
-        spinner.succeed('Analyze');
-        return res;
-      })
-      .catch(res => {
-        spinner.fail('Analyze');
-        return Promise.reject(res);
-      });
+  analyze(data: CrawlReport) {
+    const promise = this.inner.analyze(data)
+    ora.promise(promise, {
+      stream: this.stream,
+      text: 'Analyze',
+    })
+    return promise
   }
 }

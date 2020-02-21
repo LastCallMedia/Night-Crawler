@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Crawl Handler Displays output to indicate the success of the crawl 1`] = `
+"- Setup
+[32m✔[39m Setup
+- Calculating...
+Crawling [32m✔[39m Crawled 2 of 2
+- Analyze
+[32m✔[39m Analyze
+CONSOLE_ANALYSIS:1:color
+"
+`;

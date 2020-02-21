@@ -1,8 +1,8 @@
 // @flow
 
 import JUnitFactory from 'junit-report-builder/src/factory';
-import type Analysis from '../../analysis';
-import type JUnitBuilder from 'junit-report-builder/src/builder';
+import Analysis from '../../analysis';
+import JUnitBuilder from 'junit-report-builder/src/builder';
 
 type Options = {
   filename?: string

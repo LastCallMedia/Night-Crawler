@@ -1,4 +1,4 @@
-import { handler } from '../crawl';
+import {CrawlCommandArgs, handler} from '../crawl';
 import stream from 'stream';
 import os from 'os';
 import fs from 'fs';
@@ -19,17 +19,17 @@ jest.mock('../../formatters/console', () => {
   );
 });
 
-function runWithHandler(argv, handler) {
+function runWithHandler(argv: string, handler: (argv: CrawlCommandArgs) => any) {
   let invoked = 0;
   const cmd = Object.assign({}, require('../crawl'), {
-    handler: argv => {
+    handler: (argv: CrawlCommandArgs) => {
       invoked++;
       handler(argv);
     }
   });
 
   return new Promise((res, rej) => {
-    yargs.command(cmd).parse(argv, (err, argv, output) => {
+    yargs.command(cmd).parse(argv, (err: Error, argv: Object, _: unknown) => {
       if (err) return rej(err);
       if (!invoked) return rej(new Error('handler was not invoked'));
       res(argv);
@@ -68,21 +68,21 @@ describe('Crawl Command', function() {
 });
 
 describe('Crawl Handler', function() {
-  var stdout;
+  var stdout: stream.PassThrough;
   beforeEach(function() {
     stdout = new stream.PassThrough();
   });
 
   it('Executes the crawl', function() {
     let called = 0;
-    const crawler = new Crawler();
+    const crawler = new Crawler('');
     crawler.on('setup', () => called++);
 
     return handler(
       {
-        stdout
-      },
-      crawler
+        stdout,
+        crawler
+      }
     ).then(function() {
       expect(called).toEqual(1);
     });
@@ -97,12 +97,12 @@ describe('Crawl Handler', function() {
 
     return handler(
       {
-        stdout
-      },
-      crawler
+        stdout,
+        crawler
+      }
     ).then(function() {
       var output = stdout.read().toString();
-      expect(output).toMatch('Setup\nCrawl\nAnalyze\n');
+      expect(output).toMatchSnapshot();
     });
   });
 
@@ -111,9 +111,9 @@ describe('Crawl Handler', function() {
 
     return handler(
       {
-        stdout
-      },
-      crawler
+        stdout,
+        crawler
+      }
     ).then(function() {
       expect(stdout.read().toString()).toContain('CONSOLE_ANALYSIS:1:color');
     });
@@ -127,22 +127,21 @@ describe('Crawl Handler', function() {
 
     const p = handler(
       {
-        stdout
-      },
-      crawler
+        stdout,
+        crawler
+      }
     );
     return expect(p).rejects.toBeInstanceOf(FailedAnalysisError);
   });
 
   it('Should stop the crawl if setup fails', function() {
-    const crawler = {
-      setup: jest.fn(() => Promise.reject('Oh no!'))
-    };
+    const crawler = new Crawler('', new DummyDriver());
+    crawler.setup = jest.fn(() => Promise.reject('Oh no!'))
     const p = handler(
       {
-        stdout
-      },
-      crawler
+        stdout,
+        crawler
+      }
     );
     return expect(p).rejects.toBe('Oh no!');
   });
@@ -154,9 +153,9 @@ describe('Crawl Handler', function() {
     return handler(
       {
         junit: filename,
-        stdout
+        stdout,
+        crawler
       },
-      crawler
     ).then(function() {
       expect(formatJUnit).toHaveBeenCalledTimes(1);
       expect(formatJUnit.mock.calls[0][0]).toBeInstanceOf(Analysis);
@@ -172,9 +171,10 @@ describe('Crawl Handler', function() {
     return handler(
       {
         json: filename,
-        stdout
+        stdout,
+        crawler
       },
-      crawler
+
     ).then(function() {
       expect(fs.existsSync(filename)).toEqual(true);
       fs.unlinkSync(filename);

@@ -1,7 +1,8 @@
 // @flow
 
-import request from 'request-promise';
-import type { CrawlRequest, Driver } from '../types';
+import request from 'request';
+import requestP from 'request-promise';
+import { CrawlRequest, Driver } from '../types';
 
 const defaultConfig = {
   forever: true // Use keepalive for faster reconnects.
@@ -27,8 +28,8 @@ export default class RequestDriver implements Driver {
    * @param CrawlRequest req
    * @return {*}
    */
-  fetch(req: CrawlRequest): Promise<Object> {
-    return request(
+  fetch(req: CrawlRequest): Promise<request.Response> {
+    return requestP(
       Object.assign({}, this.requestConfig, {
         // These properties are not overrideable.
         uri: req.url,
@@ -36,7 +37,7 @@ export default class RequestDriver implements Driver {
         resolveWithFullResponse: true,
         simple: false // Do not throw an error on 404/etc.
       })
-    );
+    ).promise();
   }
 
   /**
@@ -45,10 +46,10 @@ export default class RequestDriver implements Driver {
    * @param Object res
    * @return {{statusCode: (*|number|statusCode), backendTime: *}}
    */
-  collect(res: Object): Object {
+  collect(res: request.Response): Object {
     return {
       statusCode: res.statusCode,
-      backendTime: res.timingPhases.firstByte
+      backendTime: res.timingPhases!.firstByte
     };
   }
 }
