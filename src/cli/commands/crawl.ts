@@ -11,6 +11,7 @@ import {BuilderCallback} from 'yargs';
 import Crawler from '../../crawler';
 import {ConfigArgs} from "../index";
 import {CrawlReport} from "../../types";
+import analysis from "../../analysis";
 
 export interface CrawlCommandArgs extends ConfigArgs {
   concurrency?: number

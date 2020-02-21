@@ -8,8 +8,6 @@ type Options = {
   minLevel: number,
   color: boolean
 };
-type Metrics = $PropertyType<Analysis, 'metrics'>;
-type Results = $PropertyType<Analysis, 'results'>;
 
 const DefaultOptions = {
   color: true,
@@ -34,6 +32,8 @@ function formatIcon(level: number) {
       return '!';
     case 0:
       return '✔';
+    default:
+      return ' ';
   }
 }
 
@@ -42,7 +42,7 @@ function formatValue(level: number, value: string, options: Options) {
 }
 
 export function formatResults(
-  results: Results,
+  results: Analysis['results'],
   options: Options = DefaultOptions
 ) {
   const rows = buildResults(results, options);
@@ -51,7 +51,7 @@ export function formatResults(
   }
   return formatValue(1, 'No results to display', options);
 }
-function buildResults(results: Results, options: Options) {
+function buildResults(results: Analysis['results'], options: Options) {
   return results
     .filter(res => res.level >= options.minLevel)
     .map(res => [
@@ -61,7 +61,7 @@ function buildResults(results: Results, options: Options) {
 }
 
 export function formatMetrics(
-  metrics: Metrics,
+  metrics: Analysis['metrics'],
   options: Options = DefaultOptions
 ) {
   const rows = buildMetrics(metrics, options);
@@ -70,12 +70,16 @@ export function formatMetrics(
   }
   return formatValue(1, 'No metrics to display', options);
 }
-function buildMetrics(metrics: Metrics, options: Options) {
-  return Array.from(metrics).map(([name, metric]) => {
-    return [
+
+type MetricRow = [string, string, string]
+function buildMetrics(metrics: Analysis['metrics'], options: Options): Array<MetricRow> {
+  const rows: Array<MetricRow> = [];
+  metrics.forEach((metric, name) => {
+    rows.push([
       formatIcon(metric.level),
       metric.displayName,
       formatValue(metric.level, metric.toString(), options)
-    ];
-  });
+    ])
+  })
+  return rows
 }

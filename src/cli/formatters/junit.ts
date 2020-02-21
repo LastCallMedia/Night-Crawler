@@ -8,9 +8,6 @@ type Options = {
   filename?: string
 };
 
-type Metrics = $PropertyType<Analysis, 'metrics'>;
-type Results = $PropertyType<Analysis, 'results'>;
-
 export default function formatJUnit(analysis: Analysis, options: Options = {}) {
   var builder = new JUnitFactory().newBuilder();
 
@@ -25,7 +22,7 @@ export default function formatJUnit(analysis: Analysis, options: Options = {}) {
   }
 }
 
-function buildResults(results: Results, builder: JUnitBuilder) {
+function buildResults(results: Analysis['results'], builder: JUnitBuilder) {
   if (results.length) {
     const suite = builder.testSuite().name(`Results`);
     results.forEach(res => {
@@ -45,7 +42,7 @@ function buildResults(results: Results, builder: JUnitBuilder) {
   }
 }
 
-function buildMetrics(metrics: Metrics, builder: JUnitBuilder) {
+function buildMetrics(metrics: Analysis['metrics'], builder: JUnitBuilder) {
   if (metrics.size) {
     const suite = builder.testSuite().name(`Aggregates`);
     metrics.forEach((metric, name) => {
