@@ -2,7 +2,7 @@ import Analysis from '../analysis';
 import { Number } from '../metrics';
 
 describe('Analysis', function() {
-  var a;
+  var a: Analysis;
   beforeEach(function() {
     a = new Analysis('Test', new Date());
   });
