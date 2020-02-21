@@ -6,7 +6,7 @@ export type CrawlRequest = {
 
 export type CrawlResponse = {
   url: string,
-  err: boolean,
+  error: boolean,
   [key: string]: any
 };
 

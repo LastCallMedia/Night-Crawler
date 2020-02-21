@@ -46,7 +46,7 @@ export default class RequestDriver implements Driver {
    * @param Object res
    * @return {{statusCode: (*|number|statusCode), backendTime: *}}
    */
-  collect(res: request.Response): Object {
+  collect(res: request.Response): {statusCode: number, backendTime: number} {
     return {
       statusCode: res.statusCode,
       backendTime: res.timingPhases!.firstByte
