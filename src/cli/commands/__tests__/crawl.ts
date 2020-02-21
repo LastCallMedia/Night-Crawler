@@ -121,8 +121,8 @@ describe('Crawl Handler', function() {
 
   it('Throws an error if the analysis contains failures', function() {
     const crawler = new Crawler('', new DummyDriver());
-    crawler.on('analyze', function(r, a) {
-      a.addMetric('foo', new Number('MyTestMetric', 2, 1));
+    crawler.on('analyze', function({analysis}) {
+      analysis.addMetric('foo', new Number('MyTestMetric', 2, 1));
     });
 
     const p = handler(

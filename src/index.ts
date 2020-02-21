@@ -12,4 +12,4 @@ Crawler.metrics = {
   Percent
 };
 
-module.exports = Crawler;
+export default Crawler

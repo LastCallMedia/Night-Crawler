@@ -1,7 +1,6 @@
-// @flow
 
 import bb from 'bluebird';
-import EventEmitter from 'events-async';
+import Emittery from 'emittery';
 import debug from 'debug';
 import Analysis from './analysis';
 import RequestDriver from './driver/request';
@@ -9,19 +8,41 @@ import RequestDriver from './driver/request';
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
 
-
 import { Driver, CrawlRequest, CrawlResponse, CrawlReport } from './types';
 
-export default class Crawler extends EventEmitter {
+type ResponseSuccessEvent = {
+  request: CrawlRequest,
+  response: Object,
+  data: CrawlResponse
+}
+type ResponseErrorEvent = {
+  request: CrawlRequest,
+  error: Error,
+  data: CrawlResponse
+}
+type AnalysisEvent = {
+  report: CrawlReport,
+  analysis: Analysis,
+}
+type EmitteryEvents = {
+  'setup': Crawler,
+  'response.success': ResponseSuccessEvent,
+  'response.error': ResponseErrorEvent,
+  'analyze': AnalysisEvent
+}
+
+export default class Crawler extends Emittery.Typed<EmitteryEvents>{
   name: string
   queue: Array<CrawlRequest>
   driver: Driver
+
   constructor(name: string, driver: Driver = new RequestDriver()) {
     super();
     this.name = name;
     this.queue = [];
     this.driver = driver;
   }
+
 
   /**
    * Run a full crawl.
@@ -45,7 +66,7 @@ export default class Crawler extends EventEmitter {
     // Always reset the queue before beginning.
     this.queue = [];
     try {
-      await this.emit({catch: true}, 'setup', this);
+      await this.emit('setup', this);
       return;
     }
     catch(e) {
@@ -122,14 +143,14 @@ export default class Crawler extends EventEmitter {
   ): Promise<CrawlResponse> {
     log(`Success on ${crawlRequest.url}`);
 
-    let collected = Object.assign(
+    let data = Object.assign(
       {},
       crawlRequest,
       { error: false },
       this.driver.collect(response)
     );
-    await this.emit('response.success', response, collected);
-    return collected;
+    await this.emit('response.success', {request: crawlRequest, response, data});
+    return data;
   }
 
   /**
@@ -144,14 +165,14 @@ export default class Crawler extends EventEmitter {
     err: Error
   ): Promise<CrawlResponse> {
     error(`Error on ${crawlRequest.url}: ${err.toString()}`);
-    let collected = Object.assign(crawlRequest, { error: true });
-    await this.emit('response.error', err, collected);
-    return collected;
+    let data = Object.assign({}, crawlRequest, { error: true });
+    await this.emit('response.error', {error: err, request: crawlRequest, data});
+    return data;
   }
 
   async analyze(report: CrawlReport): Promise<Analysis> {
     const analysis = new Analysis(report.name, report.date);
-    await this.emit('analyze', report, analysis);
+    await this.emit('analyze', {report, analysis});
     return analysis;
   }
 }

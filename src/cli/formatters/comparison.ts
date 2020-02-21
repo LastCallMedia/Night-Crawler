@@ -1,7 +1,7 @@
 // @flow
 
 import {table} from 'table';
-import { consoleDisplayValue, stringLength } from '../util';
+import { consoleDisplayValue } from '../util';
 import { ComparisonFormatter } from './types';
 import Analysis from '../../analysis';
 import { Metric } from '../../metrics';

@@ -59,24 +59,38 @@ describe('Crawler', () => {
   describe('Crawling', function() {
     it('Should should invoke success callback with the appropriate arguments', async function() {
       const cb = jest.fn();
-      var called = 0;
       const c = new Crawler('', new DummyDriver());
-      c.on('setup', (c: Crawler) => c.enqueue('http://example.com/success'))
+      const request = {url: 'http://example.com/success'}
+      c.on('setup', (c: Crawler) => c.enqueue(request))
       c.on('response.success', cb);
 
       await c.crawl();
       expect(cb.mock.calls.length).toEqual(1);
-      expect(cb.mock.calls[0][0]).toEqual({url: 'http://example.com/success'});
+      expect(cb.mock.calls[0][0]).toEqual({
+        request: request,
+        response: request,
+        data: Object.assign({}, request, {
+          error: false,
+          driverCollected: true
+        }),
+      })
     });
 
     it('Should invoke failure callback with the appropriate arguments', async function() {
       const cb = jest.fn();
       const c = new Crawler('', new DummyDriver());
+      const request = {url: 'http://example.com/fail', shouldFail: 'test'};
       c.on('setup', (c: Crawler) => c.enqueue({url: 'http://example.com/fail', shouldFail: 'test'}))
       c.on('response.error', cb);
       await c.crawl();
       expect(cb.mock.calls.length).toEqual(1);
-      expect(cb.mock.calls[0][0]).toEqual(new Error('test'));
+      expect(cb.mock.calls[0][0]).toEqual({
+        request: request,
+        error: new Error('test'),
+        data: Object.assign({}, request, {
+          error: true,
+        }),
+      })
     });
 
     it('Should return an array of collected data about responses', function() {
@@ -110,7 +124,7 @@ describe('Crawler', () => {
     it('Should collect data added through the response.success event', function() {
       const c = new Crawler('', new DummyDriver())
       c.on('setup', (c: Crawler) => c.enqueue('http://example.com/success'))
-      c.on('response.success', function(response: CrawlResponse, data: CrawlResponse) {
+      c.on('response.success', function({data}) {
         data.touched = 1;
       })
       return c.crawl()

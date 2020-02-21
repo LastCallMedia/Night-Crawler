@@ -110,7 +110,8 @@ class CrawlerSpinnerDecorator {
     let tick = () => {
       spinner.text = `Crawled ${++done} of ${this.inner.queue.length}`;
     };
-    this.inner.on('response.success', tick).on('response.error', tick);
+    this.inner.on('response.success', tick)
+    this.inner.on('response.error', tick);
     return promise;
   }
   analyze(data: CrawlReport) {
