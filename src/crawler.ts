@@ -14,7 +14,7 @@ import { Driver, CrawlRequest, CrawlResponse, CrawlReport } from './types';
 
 export default class Crawler extends EventEmitter {
   name: string
-  queue: []
+  queue: Array<CrawlRequest>
   driver: Driver
   constructor(name: string, driver: Driver = new RequestDriver()) {
     super();

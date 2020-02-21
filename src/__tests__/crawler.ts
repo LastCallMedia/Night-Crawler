@@ -88,7 +88,6 @@ describe('Crawler', () => {
 
       return c.crawl()
         .then(({ data }) => {
-          console.log(data);
           expect(data.length).toEqual(2);
           expect(data[0].url).toEqual('http://example.com/fail');
           expect(data[1].url).toEqual('http://example.com/success');
@@ -153,12 +152,12 @@ describe('Crawler', () => {
       var cb = jest.fn();
       var c = new Crawler('');
       c.on('analyze', cb);
-      return c.analyze([]);
+      return c.analyze({name: 'test', date: new Date(), data: []});
     });
 
     it('Should return a report from analyze', function() {
       var c = new Crawler('');
-      return c.analyze([]).then(report => {
+      return c.analyze({name: 'test', date: new Date(), data: []}).then(report => {
         expect(report).toBeInstanceOf(Analysis);
       });
     });

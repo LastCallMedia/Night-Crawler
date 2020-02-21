@@ -1,7 +1,5 @@
-// @flow
-
-import { consoleDisplayValue, stringLength } from '../util';
-import table from 'markdown-table';
+import { consoleDisplayValue } from '../util';
+import {table} from 'table';
 import Analysis from '../../analysis';
 
 type Options = {
@@ -47,7 +45,7 @@ export function formatResults(
 ) {
   const rows = buildResults(results, options);
   if (rows.length) {
-    return table([['', 'Url']].concat(rows), { stringLength });
+    return table([['', 'Url']].concat(rows));
   }
   return formatValue(1, 'No results to display', options);
 }
@@ -66,7 +64,7 @@ export function formatMetrics(
 ) {
   const rows = buildMetrics(metrics, options);
   if (rows.length) {
-    return table([['', 'Name', 'Value']].concat(rows), { stringLength });
+    return table([['', 'Name', 'Value']].concat(rows));
   }
   return formatValue(1, 'No metrics to display', options);
 }

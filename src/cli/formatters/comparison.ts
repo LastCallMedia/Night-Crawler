@@ -1,6 +1,6 @@
 // @flow
 
-import table from 'markdown-table';
+import {table} from 'table';
 import { consoleDisplayValue, stringLength } from '../util';
 import { ComparisonFormatter } from './types';
 import Analysis from '../../analysis';
@@ -10,7 +10,7 @@ export default class ConsoleComparisonFormatter implements ComparisonFormatter {
   format(reports: Array<Analysis>): string {
     const rows = this.buildRows(reports);
     if (rows.length) {
-      return table([this.buildHeader(reports)].concat(rows), { stringLength });
+      return table([this.buildHeader(reports)].concat(rows) );
     }
     return consoleDisplayValue(1, 'No Results');
   }
