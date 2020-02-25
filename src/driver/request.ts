@@ -1,15 +1,15 @@
-// @flow
-
 import request from 'request';
 import requestP from 'request-promise';
-import { CrawlRequest, Driver } from '../types';
+import { CrawlRequest, Driver, DriverResponse } from '../types';
 
 const defaultConfig = {
   forever: true // Use keepalive for faster reconnects.
 };
 
-export default class RequestDriver implements Driver {
-  requestConfig: Object;
+type RequestResponse = DriverResponse & request.Response;
+
+export default class RequestDriver implements Driver<RequestResponse> {
+  requestConfig: request.CoreOptions;
 
   /**
    * An array of request options to merge in with every request.
@@ -18,7 +18,7 @@ export default class RequestDriver implements Driver {
    *
    * @param Object config
    */
-  constructor(config: Object = defaultConfig) {
+  constructor(config: request.CoreOptions = defaultConfig) {
     this.requestConfig = config;
   }
 
@@ -28,7 +28,7 @@ export default class RequestDriver implements Driver {
    * @param CrawlRequest req
    * @return {*}
    */
-  fetch(req: CrawlRequest): Promise<request.Response> {
+  fetch(req: CrawlRequest): Promise<RequestResponse> {
     return requestP(
       Object.assign({}, this.requestConfig, {
         // These properties are not overrideable.
@@ -46,10 +46,10 @@ export default class RequestDriver implements Driver {
    * @param Object res
    * @return {{statusCode: (*|number|statusCode), backendTime: *}}
    */
-  collect(res: request.Response): { statusCode: number; backendTime: number } {
+  collect(res: RequestResponse): { statusCode: number; backendTime: number } {
     return {
       statusCode: res.statusCode,
-      backendTime: res.timingPhases!.firstByte
+      backendTime: res.timingPhases ? res.timingPhases.firstByte : 0
     };
   }
 }

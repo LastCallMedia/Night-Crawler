@@ -17,18 +17,7 @@ const DefaultOptions = {
   minLevel: 0
 };
 
-export default function format(
-  analysis: Analysis,
-  options: MaybeOptions = DefaultOptions
-) {
-  const opts = Object.assign({}, DefaultOptions, options);
-  const listing = formatResults(analysis.results, opts);
-  const aggregate = formatMetrics(analysis.metrics, opts);
-
-  return `Results\n======\n${listing}\n\nMetrics\n=======\n${aggregate}`;
-}
-
-function formatIcon(level: number) {
+function formatIcon(level: number): string {
   switch (level) {
     case 2:
       return '✖';
@@ -41,22 +30,14 @@ function formatIcon(level: number) {
   }
 }
 
-function formatValue(level: number, value: string, options: Options) {
+function formatValue(level: number, value: string, options: Options): string {
   return options.color ? consoleDisplayValue(level, value) : value;
 }
 
-export function formatResults(
+function buildResults(
   results: Analysis['results'],
-  options: MaybeOptions = DefaultOptions
-) {
-  const opts = Object.assign({}, DefaultOptions, options);
-  const rows = buildResults(results, opts);
-  if (rows.length) {
-    return table([['', 'Url']].concat(rows));
-  }
-  return formatValue(1, 'No results to display', opts);
-}
-function buildResults(results: Analysis['results'], options: Options) {
+  options: Options
+): [string, string][] {
   return results
     .filter(res => res.level >= options.minLevel)
     .map(res => [
@@ -65,10 +46,35 @@ function buildResults(results: Analysis['results'], options: Options) {
     ]);
 }
 
+export function formatResults(
+  results: Analysis['results'],
+  options: MaybeOptions = DefaultOptions
+): string {
+  const opts = Object.assign({}, DefaultOptions, options);
+  const rows = buildResults(results, opts);
+  if (rows.length) {
+    return table([['', 'Url']].concat(rows));
+  }
+  return formatValue(1, 'No results to display', opts);
+}
+
+function buildMetrics(
+  metrics: Analysis['metrics'],
+  options: Options
+): Array<[string, string, string]> {
+  return Array.from(metrics, ([, metric]) => {
+    return [
+      formatIcon(metric.level),
+      metric.displayName,
+      formatValue(metric.level, metric.toString(), options)
+    ];
+  });
+}
+
 export function formatMetrics(
   metrics: Analysis['metrics'],
   options: MaybeOptions = DefaultOptions
-) {
+): string {
   const opts = Object.assign({}, DefaultOptions, options);
   const rows = buildMetrics(metrics, opts);
   if (rows.length) {
@@ -77,18 +83,13 @@ export function formatMetrics(
   return formatValue(1, 'No metrics to display', opts);
 }
 
-type MetricRow = [string, string, string];
-function buildMetrics(
-  metrics: Analysis['metrics'],
-  options: Options
-): Array<MetricRow> {
-  const rows: Array<MetricRow> = [];
-  metrics.forEach((metric, name) => {
-    rows.push([
-      formatIcon(metric.level),
-      metric.displayName,
-      formatValue(metric.level, metric.toString(), options)
-    ]);
-  });
-  return rows;
+export default function format(
+  analysis: Analysis,
+  options: MaybeOptions = DefaultOptions
+): string {
+  const opts = Object.assign({}, DefaultOptions, options);
+  const listing = formatResults(analysis.results, opts);
+  const aggregate = formatMetrics(analysis.metrics, opts);
+
+  return `Results\n======\n${listing}\n\nMetrics\n=======\n${aggregate}`;
 }

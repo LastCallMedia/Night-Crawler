@@ -31,9 +31,9 @@ describe('Request Driver', function() {
       .get('/')
       .reply(200);
 
-    var d = new RequestDriver();
+    const d = new RequestDriver();
     return d.fetch({ url: 'http://www.example.com' }).then(function(res) {
-      var collected = d.collect(res);
+      const collected = d.collect(res);
       expect(typeof collected.statusCode).toEqual('number');
       expect(typeof collected.backendTime).toEqual('number');
     });
@@ -45,7 +45,7 @@ describe('Request Driver', function() {
       .replyWithError({ code: 'ETIMEDOUT' });
 
     let called = 0;
-    var d = new RequestDriver();
+    const d = new RequestDriver();
     return d
       .fetch({ url: 'http://www.example.com' })
       .catch(function(err) {

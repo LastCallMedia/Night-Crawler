@@ -7,11 +7,20 @@ import RequestDriver from './driver/request';
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
 
-import { Driver, CrawlRequest, CrawlResponse, CrawlReport } from './types';
+import {
+  Driver,
+  DriverResponse,
+  CrawlRequest,
+  CrawlResponse,
+  CrawlReport
+} from './types';
+
+const normalizeRequest = (req: CrawlRequest | string): CrawlRequest =>
+  typeof req === 'string' ? { url: req } : req;
 
 type ResponseSuccessEvent = {
   request: CrawlRequest;
-  response: Object;
+  response: DriverResponse;
   data: CrawlResponse;
 };
 type ResponseErrorEvent = {
@@ -49,7 +58,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    *
    * @returns {Promise.<Bluebird.<U[]>>}
    */
-  async crawl(concurrency: number = 3): Promise<CrawlReport> {
+  async crawl(concurrency = 3): Promise<CrawlReport> {
     await this.setup();
     return this.work(concurrency);
   }
@@ -59,7 +68,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    *
    * @returns {Promise<Bluebird<Array>|Bluebird<function(*, *=)>>}
    */
-  async setup() {
+  async setup(): Promise<void> {
     log(`Starting setup`);
     // Always reset the queue before beginning.
     this.queue = [];
@@ -77,7 +86,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    * @param req
    * @returns {Crawler}
    */
-  enqueue(req: CrawlRequest | string) {
+  enqueue(req: CrawlRequest | string): this {
     this.queue.push(normalizeRequest(req));
     return this;
   }
@@ -87,9 +96,9 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    *
    * @returns {Promise<Bluebird<U[]>>}
    */
-  async work(concurrency: number = 3): Promise<CrawlReport> {
+  async work(concurrency = 3): Promise<CrawlReport> {
     log(`Starting crawl of ${this.queue.length} urls`);
-    const doOne = (cr: CrawlRequest) => this._fetch(cr);
+    const doOne = (cr: CrawlRequest): Promise<CrawlResponse> => this._fetch(cr);
     return {
       name: this.name,
       date: new Date(),
@@ -137,11 +146,11 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    */
   async _collectSuccess(
     crawlRequest: CrawlRequest,
-    response: Object
+    response: DriverResponse
   ): Promise<CrawlResponse> {
     log(`Success on ${crawlRequest.url}`);
 
-    let data = Object.assign(
+    const data = Object.assign(
       {},
       crawlRequest,
       { error: false },
@@ -167,7 +176,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
     err: Error
   ): Promise<CrawlResponse> {
     error(`Error on ${crawlRequest.url}: ${err.toString()}`);
-    let data = Object.assign({}, crawlRequest, { error: true });
+    const data = Object.assign({}, crawlRequest, { error: true });
     await this.emit('response.error', {
       error: err,
       request: crawlRequest,
@@ -181,13 +190,4 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
     await this.emit('analyze', { report, analysis });
     return analysis;
   }
-}
-
-function normalizeRequest(request: CrawlRequest | string) {
-  if (typeof request === 'string') {
-    return {
-      url: request
-    };
-  }
-  return request;
 }

@@ -8,6 +8,7 @@ import { BuilderCallback } from 'yargs';
 import Crawler from '../../crawler';
 import { ConfigArgs } from '../index';
 import { CrawlReport } from '../../types';
+import Analysis from '../../analysis';
 
 export interface CrawlCommandArgs extends ConfigArgs {
   concurrency?: number;
@@ -15,6 +16,47 @@ export interface CrawlCommandArgs extends ConfigArgs {
   json?: string;
   junit?: string;
   stdout?: NodeJS.WritableStream;
+}
+
+class CrawlerSpinnerDecorator {
+  inner: Crawler;
+  stream: NodeJS.WritableStream;
+  constructor(inner: Crawler, stream: NodeJS.WritableStream) {
+    this.inner = inner;
+    this.stream = stream;
+  }
+  setup(): Promise<void> {
+    const promise = this.inner.setup();
+    ora.promise(promise, {
+      stream: this.stream,
+      text: 'Setup'
+    });
+    return promise;
+  }
+  work(concurrency: number): Promise<CrawlReport> {
+    const promise = this.inner.work(concurrency);
+    const spinner = ora.promise(promise, {
+      stream: this.stream,
+      text: 'Calculating...',
+      prefixText: 'Crawling'
+    });
+
+    let done = 0;
+    const tick = (): void => {
+      spinner.text = `Crawled ${++done} of ${this.inner.queue.length}`;
+    };
+    this.inner.on('response.success', tick);
+    this.inner.on('response.error', tick);
+    return promise;
+  }
+  analyze(data: CrawlReport): Promise<Analysis> {
+    const promise = this.inner.analyze(data);
+    ora.promise(promise, {
+      stream: this.stream,
+      text: 'Analyze'
+    });
+    return promise;
+  }
 }
 
 export const command = 'crawl [crawlerfile]';
@@ -48,7 +90,7 @@ export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = yargs => {
     default: ''
   });
 };
-export const handler = async function(argv: CrawlCommandArgs) {
+export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
   const { crawler, json = '', junit = '', concurrency = 3 } = argv;
   const stdout = argv.stdout ?? process.stdout;
   const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
@@ -72,44 +114,3 @@ export const handler = async function(argv: CrawlCommandArgs) {
     throw new FailedAnalysisError('Analysis reported an error');
   }
 };
-
-class CrawlerSpinnerDecorator {
-  inner: Crawler;
-  stream: NodeJS.WritableStream;
-  constructor(inner: Crawler, stream: NodeJS.WritableStream) {
-    this.inner = inner;
-    this.stream = stream;
-  }
-  setup() {
-    const promise = this.inner.setup();
-    ora.promise(promise, {
-      stream: this.stream,
-      text: 'Setup'
-    });
-    return promise;
-  }
-  work(concurrency: number) {
-    const promise = this.inner.work(concurrency);
-    const spinner = ora.promise(promise, {
-      stream: this.stream,
-      text: 'Calculating...',
-      prefixText: 'Crawling'
-    });
-
-    let done = 0;
-    let tick = () => {
-      spinner.text = `Crawled ${++done} of ${this.inner.queue.length}`;
-    };
-    this.inner.on('response.success', tick);
-    this.inner.on('response.error', tick);
-    return promise;
-  }
-  analyze(data: CrawlReport) {
-    const promise = this.inner.analyze(data);
-    ora.promise(promise, {
-      stream: this.stream,
-      text: 'Analyze'
-    });
-    return promise;
-  }
-}

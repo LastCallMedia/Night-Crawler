@@ -9,6 +9,8 @@ import formatJUnit from '../../formatters/junit';
 import Analysis from '../../../analysis';
 import yargs from 'yargs';
 
+import * as crawl from '../crawl';
+
 jest.mock('../../formatters/junit');
 jest.mock('../../formatters/console', () => {
   return jest.fn(
@@ -17,14 +19,14 @@ jest.mock('../../formatters/console', () => {
   );
 });
 
-const mockedJUnit = formatJUnit as jest.Mock<typeof formatJUnit>;
+const mockedJUnit = (formatJUnit as unknown) as jest.Mock<typeof formatJUnit>;
 
 function runWithHandler(
   argv: string,
-  handler: (argv: CrawlCommandArgs) => any
-): Promise<Object> {
+  handler: (argv: CrawlCommandArgs) => void
+): Promise<Record<string, unknown>> {
   let invoked = 0;
-  const cmd = Object.assign({}, require('../crawl'), {
+  const cmd = Object.assign({}, crawl, {
     handler: (argv: CrawlCommandArgs) => {
       invoked++;
       handler(argv);
@@ -32,11 +34,13 @@ function runWithHandler(
   });
 
   return new Promise((res, rej) => {
-    yargs.command(cmd).parse(argv, (err: Error, argv: Object, _: unknown) => {
-      if (err) return rej(err);
-      if (!invoked) return rej(new Error('handler was not invoked'));
-      res(argv);
-    });
+    yargs
+      .command(cmd)
+      .parse(argv, (err: Error, argv: Record<string, unknown>) => {
+        if (err) return rej(err);
+        if (!invoked) return rej(new Error('handler was not invoked'));
+        res(argv);
+      });
   });
 }
 describe('Crawl Command', function() {
@@ -71,7 +75,7 @@ describe('Crawl Command', function() {
 });
 
 describe('Crawl Handler', function() {
-  var stdout: stream.PassThrough;
+  let stdout: stream.PassThrough;
   beforeEach(function() {
     stdout = new stream.PassThrough();
   });
@@ -100,7 +104,7 @@ describe('Crawl Handler', function() {
       stdout,
       crawler
     }).then(function() {
-      var output = stdout.read().toString();
+      const output = stdout.read().toString();
       expect(output).toMatchSnapshot();
     });
   });
@@ -144,7 +148,7 @@ describe('Crawl Handler', function() {
   });
 
   it('Should save a junit report if requested', function() {
-    var filename = 'foo';
+    const filename = 'foo';
     const crawler = new Crawler('', new DummyDriver());
 
     return handler({
@@ -159,7 +163,7 @@ describe('Crawl Handler', function() {
   });
 
   it('Should save a valid JSON run report if requested', function() {
-    var filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
+    const filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
       Math.random() * 10000
     )}`;
     const crawler = new Crawler('', new DummyDriver());

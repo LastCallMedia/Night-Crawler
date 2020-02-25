@@ -9,7 +9,7 @@ export default class Number implements Metric {
     this.level = level;
     this.value = value;
   }
-  toString() {
+  toString(): string {
     return `${this.value}`;
   }
 }

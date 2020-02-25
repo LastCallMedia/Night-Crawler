@@ -1,18 +1,19 @@
-// @flow
+import { Driver, CrawlRequest, DriverResponse } from '../types';
 
-import { Driver, CrawlRequest } from '../types';
+type DummyResponse = DriverResponse & Record<string, unknown>;
 
 /**
  * Dummy driver for use in testing.
  */
-export default class DummyDriver implements Driver {
-  fetch(req: CrawlRequest): Promise<Object> {
-    if (req.shouldFail) {
-      return Promise.reject(new Error(req.shouldFail));
+export default class DummyDriver implements Driver<DummyResponse> {
+  fetch(req: CrawlRequest): Promise<DummyResponse> {
+    if ('shouldFail' in req && req.shouldFail) {
+      const message = req.shouldFail as string;
+      return Promise.reject(new Error(message.toString()));
     }
     return Promise.resolve(req);
   }
-  collect(res: Object) {
+  collect(): { driverCollected: boolean } {
     return {
       driverCollected: true
     };

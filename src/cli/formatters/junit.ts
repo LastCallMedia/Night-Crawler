@@ -6,25 +6,14 @@ type Options = {
   filename?: string;
 };
 
-export default function formatJUnit(analysis: Analysis, options: Options = {}) {
-  var builder = new JUnitFactory().newBuilder();
-
-  buildMetrics(analysis.metrics, builder);
-
-  buildResults(analysis.results, builder);
-
-  if (options.filename) {
-    builder.writeTo(options.filename);
-  } else {
-    return builder.build();
-  }
-}
-
-function buildResults(results: Analysis['results'], builder: JUnitBuilder) {
+function buildResults(
+  results: Analysis['results'],
+  builder: JUnitBuilder
+): void {
   if (results.length) {
     const suite = builder.testSuite().name(`Results`);
     results.forEach(res => {
-      let tc = suite
+      const tc = suite
         .testCase()
         .className(res.url)
         .time(res.time / 1000);
@@ -40,11 +29,14 @@ function buildResults(results: Analysis['results'], builder: JUnitBuilder) {
   }
 }
 
-function buildMetrics(metrics: Analysis['metrics'], builder: JUnitBuilder) {
+function buildMetrics(
+  metrics: Analysis['metrics'],
+  builder: JUnitBuilder
+): void {
   if (metrics.size) {
     const suite = builder.testSuite().name(`Aggregates`);
     metrics.forEach((metric, name) => {
-      let tc = suite
+      const tc = suite
         .testCase()
         .className(name)
         .name(metric.displayName)
@@ -58,5 +50,22 @@ function buildMetrics(metrics: Analysis['metrics'], builder: JUnitBuilder) {
           break;
       }
     });
+  }
+}
+
+export default function formatJUnit(
+  analysis: Analysis,
+  options: Options = {}
+): string | void {
+  const builder = new JUnitFactory().newBuilder();
+
+  buildMetrics(analysis.metrics, builder);
+
+  buildResults(analysis.results, builder);
+
+  if (options.filename) {
+    builder.writeTo(options.filename);
+  } else {
+    return builder.build();
   }
 }

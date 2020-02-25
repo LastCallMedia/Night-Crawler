@@ -11,7 +11,7 @@ export interface ConfigArgs {
   crawler: Crawler;
 }
 
-const loadCrawler = (argv: PreloadCrawlerArgs) => {
+const loadCrawler: MiddlewareFunction<PreloadCrawlerArgs> = argv => {
   try {
     argv.crawler = requireCrawler(argv.config);
   } catch (e) {

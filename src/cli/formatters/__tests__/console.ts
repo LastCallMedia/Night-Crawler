@@ -4,7 +4,7 @@ import Number from '../../../metrics/Number';
 
 describe('Console Formatter', function() {
   describe('Results', function() {
-    var a = new Analysis('test', new Date());
+    const a = new Analysis('test', new Date());
     a.addResult('OK', 0, 10, 'm1');
     a.addResult('WARN', 1, 10, 'm1');
     a.addResult('ERR', 2, 10, 'm1');
@@ -27,7 +27,7 @@ describe('Console Formatter', function() {
   });
 
   describe('Metrics', function() {
-    var a = new Analysis('test', new Date());
+    const a = new Analysis('test', new Date());
     a.addMetric('ok', new Number('OK metric', 0, 0));
     a.addMetric('warn', new Number('WARN metric', 1, 2));
     a.addMetric('err', new Number('ERR metric', 2, 5));
@@ -39,7 +39,7 @@ describe('Console Formatter', function() {
       expect(formatMetrics(a.metrics, { color: false })).toMatchSnapshot();
     });
     it('Should display all metrics, even when verbosity is limited to errors', function() {
-      var output = formatMetrics(a.metrics, { color: false, minLevel: 2 });
+      const output = formatMetrics(a.metrics, { color: false, minLevel: 2 });
       expect(output).toMatch('OK metric');
       expect(output).toMatch('ERR metric');
     });
@@ -57,10 +57,10 @@ describe('Console Formatter', function() {
       ).toMatchSnapshot();
     });
     it('Should show results and metrics when given an analysis containing results and metrics', function() {
-      var a = new Analysis('test', new Date());
+      const a = new Analysis('test', new Date());
       a.addMetric('ok', new Number('OK Metric', 0, 0));
       a.addResult('OK Result', 0, 10, 'r1');
-      var formatted = format(a, { color: false, minLevel: 0 });
+      const formatted = format(a, { color: false, minLevel: 0 });
       expect(formatted).toMatch('OK Metric');
       expect(formatted).toMatch('OK Result');
     });
