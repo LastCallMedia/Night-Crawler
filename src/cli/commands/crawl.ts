@@ -1,6 +1,3 @@
-// @flow
-
-import stream from 'stream'
 import ora from 'ora';
 import { EOL } from 'os';
 import fs from 'fs';
@@ -11,14 +8,13 @@ import {BuilderCallback} from 'yargs';
 import Crawler from '../../crawler';
 import {ConfigArgs} from "../index";
 import {CrawlReport} from "../../types";
-import analysis from "../../analysis";
 
 export interface CrawlCommandArgs extends ConfigArgs {
   concurrency?: number
   silent?: boolean,
   json?: string
   junit?: string
-  stdout?: stream.Writable // NodeJS.WriteStream
+  stdout?: NodeJS.WritableStream
 }
 
 export const command = 'crawl [crawlerfile]';
@@ -58,8 +54,8 @@ export const handler = async function(argv: CrawlCommandArgs) {
     json = '',
     junit = '',
     concurrency = 3,
-    stdout = process.stdout
   } = argv;
+  const stdout = argv.stdout ?? process.stdout
   const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
 
   await spunCrawler.setup();
@@ -67,7 +63,6 @@ export const handler = async function(argv: CrawlCommandArgs) {
   const data = await spunCrawler.work(concurrency);
 
   const analysis = await spunCrawler.analyze(data);
-
   stdout.write(formatConsole(analysis, { color: true, minLevel: 1 }) + EOL);
 
   if (json.length) {
@@ -85,8 +80,8 @@ export const handler = async function(argv: CrawlCommandArgs) {
 
 class CrawlerSpinnerDecorator {
   inner: Crawler;
-  stream: stream.Writable;
-  constructor(inner: Crawler, stream: stream.Writable) {
+  stream: NodeJS.WritableStream;
+  constructor(inner: Crawler, stream: NodeJS.WritableStream) {
     this.inner = inner;
     this.stream = stream;
   }

@@ -21,7 +21,7 @@ export default function format(
   analysis: Analysis,
   options: MaybeOptions = DefaultOptions
 ) {
-  const opts = Object.assign({}, options, DefaultOptions);
+  const opts = Object.assign({}, DefaultOptions, options);
   const listing = formatResults(analysis.results, opts);
   const aggregate = formatMetrics(analysis.metrics, opts);
 
@@ -49,7 +49,7 @@ export function formatResults(
   results: Analysis['results'],
   options: MaybeOptions = DefaultOptions
 ) {
-  const opts = Object.assign({}, options, DefaultOptions);
+  const opts = Object.assign({}, DefaultOptions, options);
   const rows = buildResults(results, opts);
   if (rows.length) {
     return table([['', 'Url']].concat(rows));
@@ -69,7 +69,7 @@ export function formatMetrics(
   metrics: Analysis['metrics'],
   options: MaybeOptions = DefaultOptions
 ) {
-  const opts = Object.assign({}, options, DefaultOptions);
+  const opts = Object.assign({}, DefaultOptions, options);
   const rows = buildMetrics(metrics, opts);
   if (rows.length) {
     return table([['', 'Name', 'Value']].concat(rows));

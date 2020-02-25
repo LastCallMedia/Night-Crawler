@@ -4,7 +4,6 @@ import os from 'os';
 import fs from 'fs';
 import Crawler from '../../../crawler';
 import DummyDriver from '../../../driver/dummy';
-import { Number } from '../../../metrics';
 import { FailedAnalysisError } from '../../errors';
 import formatJUnit from '../../formatters/junit';
 import Analysis from '../../../analysis';
@@ -17,6 +16,8 @@ jest.mock('../../formatters/console', () => {
       `CONSOLE_ANALYSIS:${opts.minLevel}${opts.color ? ':color' : ''}`
   );
 });
+
+const mockedJUnit = formatJUnit as jest.Mock<typeof formatJUnit>;
 
 function runWithHandler(argv: string, handler: (argv: CrawlCommandArgs) => any): Promise<Object> {
   let invoked = 0;
@@ -121,7 +122,11 @@ describe('Crawl Handler', function() {
   it('Throws an error if the analysis contains failures', function() {
     const crawler = new Crawler('', new DummyDriver());
     crawler.on('analyze', function({analysis}) {
-      analysis.addMetric('foo', new Number('MyTestMetric', 2, 1));
+      analysis.addMetric('failing', {
+        level: 2,
+        value: 1,
+        displayName: 'failing',
+      })
     });
 
     const p = handler(
@@ -156,9 +161,9 @@ describe('Crawl Handler', function() {
         crawler
       },
     ).then(function() {
-      expect(formatJUnit).toHaveBeenCalledTimes(1);
-      expect(formatJUnit.mock.calls[0][0]).toBeInstanceOf(Analysis);
-      expect(formatJUnit.mock.calls[0][1]).toEqual({ filename: 'foo' });
+      expect(mockedJUnit).toHaveBeenCalledTimes(1);
+      expect(mockedJUnit.mock.calls[0][0]).toBeInstanceOf(Analysis);
+      expect(mockedJUnit.mock.calls[0][1]).toEqual({ filename: 'foo' });
     });
   });
 

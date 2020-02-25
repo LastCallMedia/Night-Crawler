@@ -1,5 +1,5 @@
 import Analysis from '../analysis';
-import { Number } from '../metrics';
+import Number from '../metrics/Number';
 
 describe('Analysis', function() {
   let a: Analysis;

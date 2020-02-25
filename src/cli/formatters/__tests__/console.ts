@@ -1,6 +1,6 @@
 import format, { formatMetrics, formatResults } from '../console';
 import Analysis from '../../../analysis';
-import { Number } from '../../../metrics';
+import Number from '../../../metrics/Number';
 
 describe('Console Formatter', function() {
   describe('Results', function() {

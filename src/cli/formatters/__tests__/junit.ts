@@ -1,6 +1,6 @@
 import formatJUnit from '../junit';
 import Analysis from '../../../analysis';
-import { Number } from '../../../metrics';
+import Number from '../../../metrics/Number';
 import fs from 'fs';
 import os from 'os';
 

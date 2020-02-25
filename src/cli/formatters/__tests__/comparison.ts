@@ -1,6 +1,6 @@
 import ConsoleComparisonFormatter from '../comparison';
 import Analysis from '../../../analysis';
-import { Number } from '../../../metrics';
+import Number from '../../../metrics/Number';
 
 describe('Console Comparison Formatter', function() {
   it('Should compare metrics from two analyses', function() {

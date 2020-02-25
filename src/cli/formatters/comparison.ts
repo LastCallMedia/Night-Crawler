@@ -1,10 +1,7 @@
-// @flow
-
 import {table} from 'table';
 import { consoleDisplayValue } from '../util';
 import { ComparisonFormatter } from './types';
-import Analysis from '../../analysis';
-import { Metric } from '../../metrics';
+import Analysis, {Metric} from '../../analysis';
 
 export default class ConsoleComparisonFormatter implements ComparisonFormatter {
   format(reports: Array<Analysis>): string {
@@ -45,13 +42,13 @@ function consoleComparisonValue(baseline: Metric, metric: Metric | void) {
     return 'N/A';
   }
 
-  const diff = calculateDiff(baseline, metric);
+  const diff = calculateDiff(baseline.value, metric.value);
   const value = consoleDisplayValue(metric.level, metric.toString());
 
   return `${value} (${diff})`;
 }
 
-function calculateDiff(baseline: Metric, comparison: Metric): string {
-  var amount = baseline.value > 0 ? comparison.value / baseline.value : 0;
+function calculateDiff(baseline: number, comparison: number): string {
+  var amount = baseline > 0 ? comparison / baseline : 0;
   return `${amount * 100}%`;
 }

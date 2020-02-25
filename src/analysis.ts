@@ -1,12 +1,16 @@
-
-import { Metric } from "./metrics";
-
 export type AnalyzedResult = {
   url: string;
   level: number;
   time: number;
   message: string;
 };
+
+export interface Metric {
+  displayName: string;
+  level: number;
+  value: number;
+  toString(): string;
+}
 
 export default class Analysis {
   label: string;

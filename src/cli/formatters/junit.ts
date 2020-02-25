@@ -1,4 +1,3 @@
-// @flow
 
 import JUnitFactory from 'junit-report-builder/src/factory';
 import Analysis from '../../analysis';
