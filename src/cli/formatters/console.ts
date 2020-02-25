@@ -2,6 +2,11 @@ import { consoleDisplayValue } from '../util';
 import {table} from 'table';
 import Analysis from '../../analysis';
 
+type MaybeOptions = {
+  minLevel?: number
+  color?: boolean
+}
+
 type Options = {
   minLevel: number,
   color: boolean
@@ -14,10 +19,11 @@ const DefaultOptions = {
 
 export default function format(
   analysis: Analysis,
-  options: Options = DefaultOptions
+  options: MaybeOptions = DefaultOptions
 ) {
-  const listing = formatResults(analysis.results, options);
-  const aggregate = formatMetrics(analysis.metrics, options);
+  const opts = Object.assign({}, options, DefaultOptions);
+  const listing = formatResults(analysis.results, opts);
+  const aggregate = formatMetrics(analysis.metrics, opts);
 
   return `Results\n======\n${listing}\n\nMetrics\n=======\n${aggregate}`;
 }
@@ -41,13 +47,14 @@ function formatValue(level: number, value: string, options: Options) {
 
 export function formatResults(
   results: Analysis['results'],
-  options: Options = DefaultOptions
+  options: MaybeOptions = DefaultOptions
 ) {
-  const rows = buildResults(results, options);
+  const opts = Object.assign({}, options, DefaultOptions);
+  const rows = buildResults(results, opts);
   if (rows.length) {
     return table([['', 'Url']].concat(rows));
   }
-  return formatValue(1, 'No results to display', options);
+  return formatValue(1, 'No results to display', opts);
 }
 function buildResults(results: Analysis['results'], options: Options) {
   return results
@@ -60,13 +67,14 @@ function buildResults(results: Analysis['results'], options: Options) {
 
 export function formatMetrics(
   metrics: Analysis['metrics'],
-  options: Options = DefaultOptions
+  options: MaybeOptions = DefaultOptions
 ) {
-  const rows = buildMetrics(metrics, options);
+  const opts = Object.assign({}, options, DefaultOptions);
+  const rows = buildMetrics(metrics, opts);
   if (rows.length) {
     return table([['', 'Name', 'Value']].concat(rows));
   }
-  return formatValue(1, 'No metrics to display', options);
+  return formatValue(1, 'No metrics to display', opts);
 }
 
 type MetricRow = [string, string, string]

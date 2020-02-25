@@ -7,7 +7,6 @@ import DummyDriver from '../../../driver/dummy';
 import { Number } from '../../../metrics';
 import { FailedAnalysisError } from '../../errors';
 import formatJUnit from '../../formatters/junit';
-import formatConsole from '../../formatters/console';
 import Analysis from '../../../analysis';
 import yargs from 'yargs';
 
@@ -19,7 +18,7 @@ jest.mock('../../formatters/console', () => {
   );
 });
 
-function runWithHandler(argv: string, handler: (argv: CrawlCommandArgs) => any) {
+function runWithHandler(argv: string, handler: (argv: CrawlCommandArgs) => any): Promise<Object> {
   let invoked = 0;
   const cmd = Object.assign({}, require('../crawl'), {
     handler: (argv: CrawlCommandArgs) => {

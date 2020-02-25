@@ -1,4 +1,3 @@
-// @flow
 
 import { Metric } from "./metrics";
 
@@ -15,9 +14,9 @@ export default class Analysis {
   metrics: Map<string, Metric>;
   results: Array<AnalyzedResult>;
 
-  constructor(label: string, date: Date) {
-    this.label = label;
-    this.date = date;
+  constructor(label?: string, date?: Date) {
+    this.label = label ?? 'default';
+    this.date = date ?? new Date();
     this.metrics = new Map();
     this.results = [];
   }
