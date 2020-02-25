@@ -1,19 +1,18 @@
-
 export type CrawlRequest = {
-  url: string,
-  [key: string]: any
+  url: string;
+  [key: string]: any;
 };
 
 export type CrawlResponse = {
-  url: string,
-  error: boolean,
-  [key: string]: any
+  url: string;
+  error: boolean;
+  [key: string]: any;
 };
 
 export type CrawlReport = {
-  name: string,
-  date: Date,
-  data: Array<CrawlResponse>
+  name: string;
+  date: Date;
+  data: Array<CrawlResponse>;
 };
 
 export interface Driver {

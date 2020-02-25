@@ -2,12 +2,12 @@ import Analysis from '../analysis';
 import { Number } from '../metrics';
 
 describe('Analysis', function() {
-  var a: Analysis;
+  let a: Analysis;
   beforeEach(function() {
     a = new Analysis('Test', new Date());
   });
   it('Should collect metrics', function() {
-    var n = new Number('Test', 0, 1);
+    const n = new Number('Test', 0, 1);
     a.addMetric('test', n);
     expect(a.metrics.size).toEqual(1);
     expect(a.metrics.get('test')).toEqual(n);

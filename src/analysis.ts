@@ -1,12 +1,12 @@
 // @flow
 
-import { Metric } from './metrics';
+import { Metric } from "./metrics";
 
 export type AnalyzedResult = {
-  url: string,
-  level: number,
-  time: number,
-  message: string
+  url: string;
+  level: number;
+  time: number;
+  message: string;
 };
 
 export default class Analysis {
@@ -28,8 +28,9 @@ export default class Analysis {
    * @param key
    * @param metric
    */
-  addMetric(key: string, metric: Metric) {
+  addMetric(key: string, metric: Metric): this {
     this.metrics.set(key, metric);
+    return this
   }
 
   /**
@@ -40,13 +41,14 @@ export default class Analysis {
    * @param time
    * @param message
    */
-  addResult(url: string, level: number, time: number, message: string) {
+  addResult(url: string, level: number, time: number, message: string): this {
     this.results.push({
       url,
       level: level || 0,
       time: time || 0,
-      message: message || 'Ok'
+      message: message || "Ok"
     });
+    return this
   }
 
   /**
@@ -55,9 +57,9 @@ export default class Analysis {
    * @return {boolean}
    */
   hasFailures(): boolean {
-    var failingResults = this.results.filter(r => r.level > 1);
-    var failingMetrics = Array.from(this.metrics).filter(
-      ([name, metric]) => metric.level > 1
+    const failingResults = this.results.filter(r => r.level > 1);
+    const failingMetrics = Array.from(this.metrics).filter(
+      ([, metric]) => metric.level > 1
     );
     return failingResults.length > 0 || failingMetrics.length > 0;
   }

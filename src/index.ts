@@ -1,7 +1,7 @@
 // @flow
-import Crawler from './crawler';
-import RequestDriver from './driver/request';
-import { Number, Milliseconds, Percent } from './metrics';
+import Crawler from "./crawler";
+import RequestDriver from "./driver/request";
+import { Number, Milliseconds, Percent } from "./metrics";
 
 Crawler.drivers = {
   request: RequestDriver
@@ -12,4 +12,4 @@ Crawler.metrics = {
   Percent
 };
 
-export default Crawler
+export default Crawler;

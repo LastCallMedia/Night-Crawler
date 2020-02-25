@@ -1,8 +1,6 @@
 import Crawler from '../crawler';
 import Analysis from '../analysis';
 import DummyDriver from '../driver/dummy';
-import {CrawlRequest, CrawlResponse} from "../types";
-import crawler from "../crawler";
 
 describe('Crawler', () => {
   it('Should return an object containing the results of the crawl', function() {
@@ -14,8 +12,8 @@ describe('Crawler', () => {
   });
 
   it('Should invoke the setup event at the start of crawling', function() {
-    var cb = jest.fn();
-    var c = new Crawler('');
+    const cb = jest.fn();
+    const c = new Crawler('');
     c.on('setup', cb);
     return c
       .crawl()
@@ -34,9 +32,9 @@ describe('Crawler', () => {
 
   describe('Enqueue', function() {
     it('Should normalize requests that are added to the queue', function() {
-      var tests = ['foo', { url: 'foo' }];
+      const tests = ['foo', { url: 'foo' }];
       tests.forEach(function(t) {
-        var c = new Crawler('').enqueue(t);
+        const c = new Crawler('').enqueue(t);
         expect(c.queue).toEqual([
           {
             url: 'foo'
@@ -46,7 +44,7 @@ describe('Crawler', () => {
     });
 
     it('Should accept additional data that is enqueued', function() {
-      var c = new Crawler('').enqueue({ url: 'foo', foo: 'bar' });
+      const c = new Crawler('').enqueue({ url: 'foo', foo: 'bar' });
       expect(c.queue).toEqual([
         {
           url: 'foo',
@@ -163,14 +161,14 @@ describe('Crawler', () => {
 
   describe('Analyze', function() {
     it('Should invoke analyze event', function() {
-      var cb = jest.fn();
-      var c = new Crawler('');
+      const cb = jest.fn();
+      const c = new Crawler('');
       c.on('analyze', cb);
       return c.analyze({name: 'test', date: new Date(), data: []});
     });
 
     it('Should return a report from analyze', function() {
-      var c = new Crawler('');
+      const c = new Crawler('');
       return c.analyze({name: 'test', date: new Date(), data: []}).then(report => {
         expect(report).toBeInstanceOf(Analysis);
       });

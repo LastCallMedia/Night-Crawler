@@ -2,7 +2,7 @@ import { Number, Percent, Milliseconds } from '../metrics';
 
 describe('Metrics', function() {
   describe('Number', function() {
-    let m = new Number('foo', 1, 2);
+    const m = new Number('foo', 1, 2);
     it('Should set the displayName', function() {
       expect(m.displayName).toEqual('foo');
     });
@@ -18,7 +18,7 @@ describe('Metrics', function() {
   });
 
   describe('Percent', function() {
-    let m = new Percent('foo', 1, 2);
+    const m = new Percent('foo', 1, 2);
     it('Should set the displayName', function() {
       expect(m.displayName).toEqual('foo');
     });
@@ -34,7 +34,7 @@ describe('Metrics', function() {
   });
 
   describe('Milliseconds', function() {
-    let m = new Milliseconds('foo', 1, 2);
+    const m = new Milliseconds('foo', 1, 2);
     it('Should set the displayName', function() {
       expect(m.displayName).toEqual('foo');
     });
