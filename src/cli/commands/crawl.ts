@@ -4,22 +4,22 @@ import fs from 'fs';
 import { FailedAnalysisError } from '../errors';
 import formatConsole from '../formatters/console';
 import formatJUnit from '../formatters/junit';
-import {BuilderCallback} from 'yargs';
+import { BuilderCallback } from 'yargs';
 import Crawler from '../../crawler';
-import {ConfigArgs} from "../index";
-import {CrawlReport} from "../../types";
+import { ConfigArgs } from '../index';
+import { CrawlReport } from '../../types';
 
 export interface CrawlCommandArgs extends ConfigArgs {
-  concurrency?: number
-  silent?: boolean,
-  json?: string
-  junit?: string
-  stdout?: NodeJS.WritableStream
+  concurrency?: number;
+  silent?: boolean;
+  json?: string;
+  junit?: string;
+  stdout?: NodeJS.WritableStream;
 }
 
 export const command = 'crawl [crawlerfile]';
 export const describe = 'execute the crawl defined in the active config file';
-export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = (yargs) => {
+export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = yargs => {
   yargs.option('concurrency', {
     alias: 'c',
     describe: 'number of requests allowed in-flight at once',
@@ -49,13 +49,8 @@ export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = (yargs) =>
   });
 };
 export const handler = async function(argv: CrawlCommandArgs) {
-  const {
-    crawler,
-    json = '',
-    junit = '',
-    concurrency = 3,
-  } = argv;
-  const stdout = argv.stdout ?? process.stdout
+  const { crawler, json = '', junit = '', concurrency = 3 } = argv;
+  const stdout = argv.stdout ?? process.stdout;
   const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
 
   await spunCrawler.setup();
@@ -89,32 +84,32 @@ class CrawlerSpinnerDecorator {
     const promise = this.inner.setup();
     ora.promise(promise, {
       stream: this.stream,
-      text: 'Setup',
-    })
-    return promise
+      text: 'Setup'
+    });
+    return promise;
   }
   work(concurrency: number) {
     const promise = this.inner.work(concurrency);
     const spinner = ora.promise(promise, {
       stream: this.stream,
       text: 'Calculating...',
-      prefixText: 'Crawling',
-    })
+      prefixText: 'Crawling'
+    });
 
     let done = 0;
     let tick = () => {
       spinner.text = `Crawled ${++done} of ${this.inner.queue.length}`;
     };
-    this.inner.on('response.success', tick)
+    this.inner.on('response.success', tick);
     this.inner.on('response.error', tick);
     return promise;
   }
   analyze(data: CrawlReport) {
-    const promise = this.inner.analyze(data)
+    const promise = this.inner.analyze(data);
     ora.promise(promise, {
       stream: this.stream,
-      text: 'Analyze',
-    })
-    return promise
+      text: 'Analyze'
+    });
+    return promise;
   }
 }

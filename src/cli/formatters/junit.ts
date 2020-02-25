@@ -1,10 +1,9 @@
-
 import JUnitFactory from 'junit-report-builder/src/factory';
 import Analysis from '../../analysis';
 import JUnitBuilder from 'junit-report-builder/src/builder';
 
 type Options = {
-  filename?: string
+  filename?: string;
 };
 
 export default function formatJUnit(analysis: Analysis, options: Options = {}) {

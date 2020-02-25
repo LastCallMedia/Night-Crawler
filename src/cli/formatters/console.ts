@@ -1,15 +1,15 @@
 import { consoleDisplayValue } from '../util';
-import {table} from 'table';
+import { table } from 'table';
 import Analysis from '../../analysis';
 
 type MaybeOptions = {
-  minLevel?: number
-  color?: boolean
-}
+  minLevel?: number;
+  color?: boolean;
+};
 
 type Options = {
-  minLevel: number,
-  color: boolean
+  minLevel: number;
+  color: boolean;
 };
 
 const DefaultOptions = {
@@ -77,15 +77,18 @@ export function formatMetrics(
   return formatValue(1, 'No metrics to display', opts);
 }
 
-type MetricRow = [string, string, string]
-function buildMetrics(metrics: Analysis['metrics'], options: Options): Array<MetricRow> {
+type MetricRow = [string, string, string];
+function buildMetrics(
+  metrics: Analysis['metrics'],
+  options: Options
+): Array<MetricRow> {
   const rows: Array<MetricRow> = [];
   metrics.forEach((metric, name) => {
     rows.push([
       formatIcon(metric.level),
       metric.displayName,
       formatValue(metric.level, metric.toString(), options)
-    ])
-  })
-  return rows
+    ]);
+  });
+  return rows;
 }

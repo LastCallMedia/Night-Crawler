@@ -1,13 +1,13 @@
-import {table} from 'table';
+import { table } from 'table';
 import { consoleDisplayValue } from '../util';
 import { ComparisonFormatter } from './types';
-import Analysis, {Metric} from '../../analysis';
+import Analysis, { Metric } from '../../analysis';
 
 export default class ConsoleComparisonFormatter implements ComparisonFormatter {
   format(reports: Array<Analysis>): string {
     const rows = this.buildRows(reports);
     if (rows.length) {
-      return table([this.buildHeader(reports)].concat(rows) );
+      return table([this.buildHeader(reports)].concat(rows));
     }
     return consoleDisplayValue(1, 'No Results');
   }

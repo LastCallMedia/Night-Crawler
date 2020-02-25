@@ -33,7 +33,7 @@ export default class Analysis {
    */
   addMetric(key: string, metric: Metric): this {
     this.metrics.set(key, metric);
-    return this
+    return this;
   }
 
   /**
@@ -49,9 +49,9 @@ export default class Analysis {
       url,
       level: level || 0,
       time: time || 0,
-      message: message || "Ok"
+      message: message || 'Ok'
     });
-    return this
+    return this;
   }
 
   /**

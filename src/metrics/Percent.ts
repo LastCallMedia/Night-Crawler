@@ -1,7 +1,7 @@
-import Number from './Number'
+import Number from './Number';
 
 export default class Percent extends Number {
-    toString() {
-        return `${Math.round(this.value * 100)}%`;
-    }
+  toString() {
+    return `${Math.round(this.value * 100)}%`;
+  }
 }
