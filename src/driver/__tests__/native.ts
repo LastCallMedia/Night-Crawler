@@ -1,14 +1,31 @@
-import RequestDriver from '../request';
 import nock from 'nock';
+import NativeDriver from '../native';
 
-describe('Request Driver', function() {
-  it('Should return a response for a crawlRequest', function() {
+describe('Native Driver', function() {
+  it('Should throw an error for invalid schemes', async function() {
+    await expect(
+      new NativeDriver().fetch({ url: 'foo://bar' })
+    ).rejects.toThrow('Unknown protocol: foo:');
+  });
+
+  it('Should return a response for an HTTP crawlRequest', function() {
     nock('http://www.example.com')
       .get('/')
       .reply(201);
 
-    return new RequestDriver()
+    return new NativeDriver()
       .fetch({ url: 'http://www.example.com' })
+      .then(function(res) {
+        expect(res.statusCode).toEqual(201);
+      });
+  });
+  it('Should return a response for an HTTPS crawlRequest', function() {
+    nock('https://www.example.com')
+      .get('/')
+      .reply(201);
+
+    return new NativeDriver()
+      .fetch({ url: 'https://www.example.com' })
       .then(function(res) {
         expect(res.statusCode).toEqual(201);
       });
@@ -19,7 +36,7 @@ describe('Request Driver', function() {
       .get('/')
       .reply(500);
 
-    return new RequestDriver()
+    return new NativeDriver()
       .fetch({ url: 'http://www.example.com' })
       .then(function(res) {
         expect(res.statusCode).toEqual(500);
@@ -31,7 +48,7 @@ describe('Request Driver', function() {
       .get('/')
       .reply(200);
 
-    const d = new RequestDriver();
+    const d = new NativeDriver();
     return d.fetch({ url: 'http://www.example.com' }).then(function(res) {
       const collected = d.collect(res);
       expect(typeof collected.statusCode).toEqual('number');
@@ -45,12 +62,12 @@ describe('Request Driver', function() {
       .replyWithError({ code: 'ETIMEDOUT' });
 
     let called = 0;
-    const d = new RequestDriver();
+    const d = new NativeDriver();
     return d
       .fetch({ url: 'http://www.example.com' })
       .catch(function(err) {
         called++;
-        expect(err.error.code).toEqual('ETIMEDOUT');
+        expect(err.code).toEqual('ETIMEDOUT');
       })
       .then(function() {
         expect(called).toEqual(1);
@@ -66,7 +83,7 @@ describe('Request Driver', function() {
       })
       .reply(200);
 
-    return new RequestDriver({ auth: { user: 'john', pass: 'doe' } })
+    return new NativeDriver({ auth: 'john:doe' })
       .fetch({ url: 'http://www.example.com' })
       .then(function(res) {
         expect(res.statusCode).toEqual(200);

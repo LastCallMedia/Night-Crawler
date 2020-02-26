@@ -7,11 +7,8 @@
     "chalk": "^2.3.0",
     "debug": "^3.1.0",
     "emittery": "^0.5.1",
-    "forever-agent": "^0.6.1",
     "ora": "^4.0.3",
     "p-map": "^3.0.0",
-    "request": "^2.88.2",
-    "request-promise": "^4.2.5",
     "table": "^5.4.6",
     "xml": "^1.0.1",
     "yargs": "^15.1.0"
