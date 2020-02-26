@@ -89,4 +89,23 @@ describe('Native Driver', function() {
         expect(res.statusCode).toEqual(200);
       });
   });
+  it('Should shut down http agent when end() is called.', async function() {
+    nock('http://www.example.com')
+      .get('/')
+      .reply(200);
+    const driver = new NativeDriver();
+    await driver.fetch({ url: 'http://www.example.com/' });
+    await driver.end();
+    expect(driver.httpAgent).toBeUndefined();
+  });
+
+  it('Should shut down https agent when end() is called.', async function() {
+    nock('https://www.example.com')
+      .get('/')
+      .reply(200);
+    const driver = new NativeDriver();
+    await driver.fetch({ url: 'https://www.example.com/' });
+    await driver.end();
+    expect(driver.httpsAgent).toBeUndefined();
+  });
 });

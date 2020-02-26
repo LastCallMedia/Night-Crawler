@@ -18,4 +18,7 @@ export default class DummyDriver implements Driver<DummyResponse> {
       driverCollected: true
     };
   }
+  async end(): Promise<void> {
+    // Nothing.
+  }
 }

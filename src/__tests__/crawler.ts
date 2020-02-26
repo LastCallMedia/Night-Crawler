@@ -30,6 +30,14 @@ describe('Crawler', () => {
     );
   });
 
+  it('Should invoke the end event on drivers at the end of crawling', async function() {
+    const end = jest.fn();
+    const d = new DummyDriver();
+    d.end = end;
+    await new Crawler('', d).crawl();
+    expect(end.mock.calls.length).toEqual(1);
+  });
+
   describe('Enqueue', function() {
     it('Should normalize requests that are added to the queue', function() {
       const tests = ['foo', { url: 'foo' }];

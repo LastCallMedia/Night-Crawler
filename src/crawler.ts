@@ -60,7 +60,9 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    */
   async crawl(concurrency = 3): Promise<CrawlReport> {
     await this.setup();
-    return this.work(concurrency);
+    const results = await this.work(concurrency);
+    await this.driver.end();
+    return results;
   }
 
   /**

@@ -10,12 +10,10 @@ type NativeDriverResponse = http.IncomingMessage & {
 
 export default class NativeDriver implements Driver<NativeDriverResponse> {
   opts: https.RequestOptions;
-  httpAgent: http.Agent;
-  httpsAgent: https.Agent;
+  httpAgent?: http.Agent;
+  httpsAgent?: https.Agent;
   constructor(opts: https.RequestOptions = {}) {
     this.opts = opts;
-    this.httpAgent = new http.Agent({ keepAlive: true });
-    this.httpsAgent = new https.Agent({ keepAlive: true });
   }
 
   fetch(crawlRequest: CrawlRequest): Promise<NativeDriverResponse> {
@@ -51,12 +49,29 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
     };
   }
 
+  async end(): Promise<void> {
+    if (this.httpAgent) {
+      this.httpAgent.destroy();
+      this.httpAgent = undefined;
+    }
+    if (this.httpsAgent) {
+      this.httpsAgent.destroy();
+      this.httpsAgent = undefined;
+    }
+  }
+
   private _getAgent(url: URL): http.Agent {
     switch (url.protocol) {
       case 'https:':
-        return this.httpsAgent;
+        if (this.httpsAgent) {
+          return this.httpsAgent;
+        }
+        return (this.httpsAgent = new https.Agent({ keepAlive: true }));
       case 'http:':
-        return this.httpAgent;
+        if (this.httpAgent) {
+          return this.httpAgent;
+        }
+        return (this.httpAgent = new http.Agent({ keepAlive: true }));
       default:
         throw new Error('Unknown protocol: ' + url.protocol);
     }
