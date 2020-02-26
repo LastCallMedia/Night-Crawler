@@ -43,7 +43,7 @@ describe('Native Driver', function() {
       });
   });
 
-  it('Should copy status code and backendTime to the collected data', function() {
+  it('Should copy status code and time to the collected data', function() {
     nock('http://www.example.com')
       .get('/')
       .reply(200);
@@ -52,7 +52,7 @@ describe('Native Driver', function() {
     return d.fetch({ url: 'http://www.example.com' }).then(function(res) {
       const collected = d.collect(res);
       expect(typeof collected.statusCode).toEqual('number');
-      expect(typeof collected.backendTime).toEqual('number');
+      expect(typeof collected.time).toEqual('number');
     });
   });
 

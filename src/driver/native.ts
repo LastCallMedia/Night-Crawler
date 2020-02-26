@@ -1,4 +1,4 @@
-import { Driver, CrawlRequest, DriverResponse } from '../types';
+import { Driver, CrawlRequest } from '../types';
 import https from 'https';
 import http from 'http';
 import { URL } from 'url';
@@ -14,15 +14,15 @@ function getDriver(protocol: string): typeof http | typeof https {
       throw new Error('Unknown protocol: ' + protocol);
   }
 }
-type Response = {
-  statusCode: number | undefined;
-  ttfb: number;
+
+type NativeDriverResponse = http.IncomingMessage & {
+  time: number;
 };
 
 function request(
   url: string,
   options: https.RequestOptions
-): Promise<Response> {
+): Promise<NativeDriverResponse> {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
     const driver = getDriver(parsed.protocol);
@@ -39,17 +39,14 @@ function request(
 
     const start = performance.now();
     const req = driver.request(theseOptions, res => {
-      resolve({
-        statusCode: res.statusCode,
-        ttfb: performance.now() - start
-      });
+      resolve(Object.assign(res, { time: performance.now() - start }));
     });
     req.on('error', reject);
     req.end();
   });
 }
 
-export default class NativeDriver implements Driver {
+export default class NativeDriver implements Driver<NativeDriverResponse> {
   opts: https.RequestOptions;
   agent: http.Agent;
   constructor(opts: https.RequestOptions = {}) {
@@ -57,13 +54,15 @@ export default class NativeDriver implements Driver {
     this.agent = new http.Agent({ keepAlive: true });
   }
 
-  fetch(req: CrawlRequest): Promise<DriverResponse> {
+  fetch(req: CrawlRequest): Promise<NativeDriverResponse> {
     return request(req.url, { ...this.opts, ...{ agent: this.agent } });
   }
-  collect(response: DriverResponse): Record<string, unknown> {
+  collect(
+    response: NativeDriverResponse
+  ): { statusCode: number | undefined; time: number } {
     return {
       statusCode: response.statusCode,
-      backendTime: response.ttfb
+      time: response.time
     };
   }
 }
