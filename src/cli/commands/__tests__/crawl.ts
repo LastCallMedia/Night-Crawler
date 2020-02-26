@@ -11,7 +11,9 @@ import yargs from 'yargs';
 
 import * as crawl from '../crawl';
 
-jest.mock('../../formatters/junit');
+jest.mock('../../formatters/junit', () => {
+  return jest.fn(() => 'THIS IS A JUNIT REPORT');
+});
 jest.mock('../../formatters/console', () => {
   return jest.fn(
     (_, opts) =>
@@ -147,33 +149,36 @@ describe('Crawl Handler', function() {
     return expect(p).rejects.toBe('Oh no!');
   });
 
-  it('Should save a junit report if requested', function() {
-    const filename = 'foo';
-    const crawler = new Crawler('', new DummyDriver());
-
-    return handler({
-      junit: filename,
-      stdout,
-      crawler
-    }).then(function() {
-      expect(mockedJUnit).toHaveBeenCalledTimes(1);
-      expect(mockedJUnit.mock.calls[0][0]).toBeInstanceOf(Analysis);
-      expect(mockedJUnit.mock.calls[0][1]).toEqual({ filename: 'foo' });
-    });
-  });
-
-  it('Should save a valid JSON run report if requested', function() {
+  it('Should save a junit report if requested', async function() {
     const filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
       Math.random() * 10000
     )}`;
     const crawler = new Crawler('', new DummyDriver());
-    return handler({
+
+    await handler({
+      junit: filename,
+      stdout,
+      crawler
+    });
+    expect(mockedJUnit).toHaveBeenCalledTimes(1);
+    expect(mockedJUnit.mock.calls[0][0]).toBeInstanceOf(Analysis);
+    await expect(
+      fs.promises.readFile(filename, { encoding: 'utf-8' })
+    ).resolves.toEqual('THIS IS A JUNIT REPORT');
+    await fs.promises.unlink(filename);
+  });
+
+  it('Should save a valid JSON run report if requested', async function() {
+    const filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
+      Math.random() * 10000
+    )}`;
+    const crawler = new Crawler('', new DummyDriver());
+    await handler({
       json: filename,
       stdout,
       crawler
-    }).then(function() {
-      expect(fs.existsSync(filename)).toEqual(true);
-      fs.unlinkSync(filename);
     });
+    await expect(fs.promises.stat(filename)).resolves.toBeTruthy();
+    await fs.promises.unlink(filename);
   });
 });
