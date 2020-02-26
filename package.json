@@ -47,7 +47,6 @@
   "scripts": {
     "prettier": "prettier --single-quote --write './src/**/*.ts'",
     "test": "jest",
-    "flow": "flow",
     "check-types": "tsc",
     "build": "babel src/ --out-dir=dist --extensions '.ts'",
     "lint": "eslint ./src/ --ext .js,.jsx,.ts,.tsx"
