@@ -59,9 +59,10 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
   }
   collect(
     response: NativeDriverResponse
-  ): { statusCode: number | undefined; time: number } {
+  ): { statusCode?: number; statusMessage?: string; time: number } {
     return {
       statusCode: response.statusCode,
+      statusMessage: response.statusMessage,
       time: response.time
     };
   }
