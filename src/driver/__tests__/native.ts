@@ -89,23 +89,48 @@ describe('Native Driver', function() {
         expect(res.statusCode).toEqual(200);
       });
   });
-  it('Should shut down http agent when end() is called.', async function() {
-    nock('http://www.example.com')
-      .get('/')
-      .reply(200);
-    const driver = new NativeDriver();
-    await driver.fetch({ url: 'http://www.example.com/' });
-    await driver.end();
-    expect(driver.httpAgent).toBeUndefined();
-  });
 
-  it('Should shut down https agent when end() is called.', async function() {
+  it('Should reject when the socket times out.', async function() {
     nock('https://www.example.com')
       .get('/')
+      .socketDelay(500)
       .reply(200);
-    const driver = new NativeDriver();
-    await driver.fetch({ url: 'https://www.example.com/' });
-    await driver.end();
-    expect(driver.httpsAgent).toBeUndefined();
+    const driver = new NativeDriver({ timeout: 10 });
+    await expect(
+      driver.fetch({ url: 'https://www.example.com/' })
+    ).rejects.toThrowError('socket hang up');
+  });
+
+  it('Should reject when the request times out', async function() {
+    nock('https://www.example.com')
+      .get('/')
+      .delay(500)
+      .reply(200);
+    const driver = new NativeDriver({ timeout: 10 });
+    await expect(
+      driver.fetch({ url: 'https://www.example.com/' })
+    ).rejects.toBeTruthy();
+  });
+
+  it('Should require the headers to resolve before the timeout', async function() {
+    nock('https://www.example.com')
+      .get('/')
+      .delay({ head: 500 })
+      .reply(200);
+    const driver = new NativeDriver({ timeout: 10 });
+    await expect(
+      driver.fetch({ url: 'https://www.example.com/' })
+    ).rejects.toBeTruthy();
+  });
+
+  it('Should not require the body to resolve before the timeout', async function() {
+    nock('https://www.example.com')
+      .get('/')
+      .delay({ body: 500 })
+      .reply(200);
+    const driver = new NativeDriver({ timeout: 10 });
+    await expect(
+      driver.fetch({ url: 'https://www.example.com/' })
+    ).resolves.toBeTruthy();
   });
 });

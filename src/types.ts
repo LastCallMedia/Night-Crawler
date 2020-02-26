@@ -33,11 +33,4 @@ export interface Driver<ResponseType extends DriverResponse = DriverResponse> {
    * into the collected data the crawler itself gathers.
    */
   collect(response: ResponseType): Record<string, unknown>;
-
-  /**
-   * Shut the driver down.
-   *
-   * A driver may use this method for doing cleanup of any open sockets.
-   */
-  end(): Promise<void>;
 }

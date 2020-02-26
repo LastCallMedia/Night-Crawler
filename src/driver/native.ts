@@ -25,14 +25,17 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
           host: parsed.hostname,
           port: parsed.port,
           path: parsed.pathname,
-          method: 'GET',
-          agent: this._getAgent(parsed)
+          method: 'GET'
         },
         this.opts
       );
       const start = performance.now();
       const req = this._getDriver(parsed).request(theseOptions, res => {
         resolve(Object.assign(res, { time: performance.now() - start }));
+        res.on('end', () => console.log('Ending request'));
+      });
+      req.on('timeout', () => {
+        req.abort();
       });
       req.on('error', reject);
       req.end();
@@ -49,33 +52,6 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
     };
   }
 
-  async end(): Promise<void> {
-    if (this.httpAgent) {
-      this.httpAgent.destroy();
-      this.httpAgent = undefined;
-    }
-    if (this.httpsAgent) {
-      this.httpsAgent.destroy();
-      this.httpsAgent = undefined;
-    }
-  }
-
-  private _getAgent(url: URL): http.Agent {
-    switch (url.protocol) {
-      case 'https:':
-        if (this.httpsAgent) {
-          return this.httpsAgent;
-        }
-        return (this.httpsAgent = new https.Agent({ keepAlive: true }));
-      case 'http:':
-        if (this.httpAgent) {
-          return this.httpAgent;
-        }
-        return (this.httpAgent = new http.Agent({ keepAlive: true }));
-      default:
-        throw new Error('Unknown protocol: ' + url.protocol);
-    }
-  }
   private _getDriver(url: URL): typeof http | typeof https {
     switch (url.protocol) {
       case 'https:':
