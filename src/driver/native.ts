@@ -25,14 +25,14 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
           host: parsed.hostname,
           port: parsed.port,
           path: parsed.pathname,
-          method: 'GET'
+          method: 'GET',
+          timeout: 15000
         },
         this.opts
       );
       const start = performance.now();
       const req = this._getDriver(parsed).request(theseOptions, res => {
         resolve(Object.assign(res, { time: performance.now() - start }));
-        res.on('end', () => console.log('Ending request'));
       });
       req.on('timeout', () => {
         req.abort();
