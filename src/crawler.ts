@@ -1,15 +1,49 @@
-// @flow
-
-const Promise = require('bluebird');
-const EventEmitter = require('events-async');
-const log = require('debug')('nightcrawler:info');
-const error = require('debug')('nightcrawler:error');
+import pMap from 'p-map';
+import Emittery from 'emittery';
+import debug from 'debug';
 import Analysis from './analysis';
 import RequestDriver from './driver/request';
 
-import type { Driver, CrawlRequest, CrawlResponse, CrawlReport } from './types';
+const log = debug('nightcrawler:info');
+const error = debug('nightcrawler:error');
 
-class Crawler extends EventEmitter {
+import {
+  Driver,
+  DriverResponse,
+  CrawlRequest,
+  CrawlResponse,
+  CrawlReport
+} from './types';
+
+const normalizeRequest = (req: CrawlRequest | string): CrawlRequest =>
+  typeof req === 'string' ? { url: req } : req;
+
+type ResponseSuccessEvent = {
+  request: CrawlRequest;
+  response: DriverResponse;
+  data: CrawlResponse;
+};
+type ResponseErrorEvent = {
+  request: CrawlRequest;
+  error: Error;
+  data: CrawlResponse;
+};
+type AnalysisEvent = {
+  report: CrawlReport;
+  analysis: Analysis;
+};
+type EmitteryEvents = {
+  setup: Crawler;
+  'response.success': ResponseSuccessEvent;
+  'response.error': ResponseErrorEvent;
+  analyze: AnalysisEvent;
+};
+
+export default class Crawler extends Emittery.Typed<EmitteryEvents> {
+  name: string;
+  queue: Array<CrawlRequest>;
+  driver: Driver;
+
   constructor(name: string, driver: Driver = new RequestDriver()) {
     super();
     this.name = name;
@@ -24,7 +58,7 @@ class Crawler extends EventEmitter {
    *
    * @returns {Promise.<Bluebird.<U[]>>}
    */
-  async crawl(concurrency: number = 3): Promise<CrawlReport> {
+  async crawl(concurrency = 3): Promise<CrawlReport> {
     await this.setup();
     return this.work(concurrency);
   }
@@ -34,16 +68,15 @@ class Crawler extends EventEmitter {
    *
    * @returns {Promise<Bluebird<Array>|Bluebird<function(*, *=)>>}
    */
-  async setup() {
+  async setup(): Promise<void> {
     log(`Starting setup`);
     // Always reset the queue before beginning.
     this.queue = [];
     try {
-      await this.emit({catch: true}, 'setup', this);
+      await this.emit('setup', this);
       return;
-    }
-    catch(e) {
-      return Promise.reject(`Setup failed with an error: ${e.toString()}`)
+    } catch (e) {
+      return Promise.reject(`Setup failed with an error: ${e.toString()}`);
     }
   }
 
@@ -53,7 +86,7 @@ class Crawler extends EventEmitter {
    * @param req
    * @returns {Crawler}
    */
-  enqueue(req: CrawlRequest | string) {
+  enqueue(req: CrawlRequest | string): this {
     this.queue.push(normalizeRequest(req));
     return this;
   }
@@ -61,15 +94,15 @@ class Crawler extends EventEmitter {
   /**
    * Work through the queue, fetching requests and returning data for each request.
    *
-   * @returns {Promise<Bluebird<U[]>>}
+   * @param concurrency
    */
-  async work(concurrency: number = 3): Promise<CrawlReport> {
+  async work(concurrency = 3): Promise<CrawlReport> {
     log(`Starting crawl of ${this.queue.length} urls`);
-    const doOne = (cr: CrawlRequest) => this._fetch(cr);
+    const doOne = (cr: CrawlRequest): Promise<CrawlResponse> => this._fetch(cr);
     return {
       name: this.name,
       date: new Date(),
-      data: await Promise.map(this.queue, doOne, { concurrency })
+      data: await pMap(this.queue, doOne, {concurrency})
     };
   }
 
@@ -85,21 +118,22 @@ class Crawler extends EventEmitter {
 
     try {
       res = await this.driver.fetch(req);
-    }
-    catch(err) {
+    } catch (err) {
       try {
         return await this._collectError(req, err);
-      }
-      catch(err) {
-        return Promise.reject(`An error was caught during processing of a failure result: ${err.toString()}`);
+      } catch (err) {
+        return Promise.reject(
+          `An error was caught during processing of a failure result: ${err.toString()}`
+        );
       }
     }
 
     try {
       return await this._collectSuccess(req, res);
-    }
-    catch(err) {
-      return Promise.reject(`An error was caught during processing of a successful result: ${err.toString()}`)
+    } catch (err) {
+      return Promise.reject(
+        `An error was caught during processing of a successful result: ${err.toString()}`
+      );
     }
   }
 
@@ -112,18 +146,22 @@ class Crawler extends EventEmitter {
    */
   async _collectSuccess(
     crawlRequest: CrawlRequest,
-    response: Object
+    response: DriverResponse
   ): Promise<CrawlResponse> {
     log(`Success on ${crawlRequest.url}`);
 
-    let collected = Object.assign(
+    const data = Object.assign(
       {},
       crawlRequest,
       { error: false },
       this.driver.collect(response)
     );
-    await this.emit('response.success', response, collected);
-    return collected;
+    await this.emit('response.success', {
+      request: crawlRequest,
+      response,
+      data
+    });
+    return data;
   }
 
   /**
@@ -138,25 +176,18 @@ class Crawler extends EventEmitter {
     err: Error
   ): Promise<CrawlResponse> {
     error(`Error on ${crawlRequest.url}: ${err.toString()}`);
-    let collected = Object.assign(crawlRequest, { error: true });
-    await this.emit('response.error', err, collected);
-    return collected;
+    const data = Object.assign({}, crawlRequest, { error: true });
+    await this.emit('response.error', {
+      error: err,
+      request: crawlRequest,
+      data
+    });
+    return data;
   }
 
   async analyze(report: CrawlReport): Promise<Analysis> {
     const analysis = new Analysis(report.name, report.date);
-    await this.emit('analyze', report, analysis);
+    await this.emit('analyze', { report, analysis });
     return analysis;
   }
 }
-
-function normalizeRequest(request: CrawlRequest | string) {
-  if (typeof request === 'string') {
-    return {
-      url: request
-    };
-  }
-  return request;
-}
-
-module.exports = Crawler;

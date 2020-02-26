@@ -4,73 +4,56 @@
   "main": "dist/index.js",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^3.5.1",
     "chalk": "^2.3.0",
     "debug": "^3.1.0",
-    "events-async": "^1.2.1",
+    "emittery": "^0.5.1",
     "forever-agent": "^0.6.1",
-    "junit-report-builder": "^1.2.0",
-    "markdown-table": "^1.1.1",
-    "ora": "^2.0.0",
-    "request": "^2.83.0",
-    "request-promise": "^4.2.2",
-    "yargs": "^12.0.1"
+    "ora": "^4.0.3",
+    "p-map": "^3.0.0",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.5",
+    "table": "^5.4.6",
+    "xml": "^1.0.1",
+    "yargs": "^15.1.0"
   },
   "bin": {
     "nightcrawler": "bin/nightcrawler"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-eslint": "^8.2.5",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-flow": "^6.23.0",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.4",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
+    "@babel/preset-env": "^7.8.4",
+    "@babel/preset-typescript": "^7.8.3",
+    "@types/bluebird": "^3.5.29",
+    "@types/debug": "^4.1.5",
+    "@types/jest": "^25.1.2",
+    "@types/node": "^13.7.2",
+    "@types/request-promise": "^4.1.45",
+    "@types/table": "^4.0.7",
+    "@types/xml": "^1.0.4",
+    "@typescript-eslint/eslint-plugin": "^2.21.0",
+    "@typescript-eslint/parser": "^2.21.0",
     "chai": "^4.1.2",
-    "eslint": "^4.17.0",
-    "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-flowtype": "^2.50.0",
-    "flow": "^0.2.3",
-    "flow-bin": "^0.76.0",
-    "jest": "^23.4.0",
-    "jest-junit": "^5.1.0",
-    "nock": "^9.1.6",
-    "prettier": "^1.10.2"
+    "eslint": "^6.8.0",
+    "jest": "^25.1.0",
+    "jest-junit": "^10.0.0",
+    "nock": "^12.0.1",
+    "prettier": "^1.19.1",
+    "typescript": "^3.7.5"
   },
   "scripts": {
-    "prettier": "prettier --single-quote --write '{src,test}/**/*.{js,jsx}' '*.js'",
+    "prettier": "prettier --single-quote --write './src/**/*.ts'",
     "test": "jest",
-    "flow": "flow",
-    "build": "babel src/ --out-dir=dist"
+    "check-types": "tsc",
+    "build": "babel src/ --out-dir=dist --extensions '.ts' --ignore 'src/**/__tests__/**'",
+    "lint": "eslint ./src/ --ext .js,.jsx,.ts,.tsx"
   },
   "files": [
     "dist/*",
     "bin/*"
   ],
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "node": "8"
-          }
-        }
-      ],
-      "flow"
-    ]
-  },
-  "eslintConfig": {
-    "extends": [
-      "prettier",
-      "plugin:flowtype/recommended"
-    ],
-    "plugins": [
-      "flowtype"
-    ],
-    "parserOptions": {
-      "ecmaVersion": 2017,
-      "sourceType": "module"
-    }
-  },
   "jest": {
     "collectCoverage": true,
     "testPathIgnorePatterns": [

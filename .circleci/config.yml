@@ -3,19 +3,19 @@ jobs:
   test:
     working_directory: /srv
     docker:
-      - image: node:8
+      - image: node:10
     steps:
       - checkout
       - run: npm install
       - run:
           name: "ESLint"
-          command: node_modules/.bin/eslint . --format junit -o /tmp/junit/eslint.xml
+          command: npm run lint -- --format junit -o /tmp/junit/eslint.xml
       - run:
-          name: "Flow"
-          command: node_modules/.bin/flow
+          name: "Typescript"
+          command: npm run check-types
       - run:
           name: "Jest"
-          command: node_modules/.bin/jest --ci --testResultsProcessor="jest-junit"
+          command: npm run test -- --ci --reporters="default" --reporters="jest-junit"
           environment:
             JEST_JUNIT_OUTPUT: "/tmp/junit/jest.xml"
       - store_test_results:
@@ -29,7 +29,7 @@ jobs:
   publish:
     working_directory: /srv
     docker:
-      - image: node:8
+      - image: node:10
     steps:
       - checkout
       - run: npm install

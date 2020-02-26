@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Console Formatter Format Should show output in color when there are no results or metrics and color is requested 1`] = `
+"Results
+======
+[33mNo results to display[39m
+
+Metrics
+=======
+[33mNo metrics to display[39m"
+`;
+
+exports[`Console Formatter Format Should show output when there are no results or metrics 1`] = `
+"Results
+======
+No results to display
+
+Metrics
+=======
+No metrics to display"
+`;
+
+exports[`Console Formatter Metrics Should output metrics in color if requested 1`] = `
+"╔═══╤═════════════╤═══════╗
+║   │ Name        │ Value ║
+╟───┼─────────────┼───────╢
+║ ✔ │ OK metric   │ 0     ║
+╟───┼─────────────┼───────╢
+║ ! │ WARN metric │ [33m2[39m     ║
+╟───┼─────────────┼───────╢
+║ ✖ │ ERR metric  │ [31m5[39m     ║
+╚═══╧═════════════╧═══════╝
+"
+`;
+
+exports[`Console Formatter Metrics Should output metrics without color if requested 1`] = `
+"╔═══╤═════════════╤═══════╗
+║   │ Name        │ Value ║
+╟───┼─────────────┼───────╢
+║ ✔ │ OK metric   │ 0     ║
+╟───┼─────────────┼───────╢
+║ ! │ WARN metric │ 2     ║
+╟───┼─────────────┼───────╢
+║ ✖ │ ERR metric  │ 5     ║
+╚═══╧═════════════╧═══════╝
+"
+`;
+
+exports[`Console Formatter Results Should filter out success results if verbosity is warning 1`] = `
+"╔═══╤══════╗
+║   │ Url  ║
+╟───┼──────╢
+║ ! │ WARN ║
+╟───┼──────╢
+║ ✖ │ ERR  ║
+╚═══╧══════╝
+"
+`;
+
+exports[`Console Formatter Results Should output results in color if requested 1`] = `
+"╔═══╤══════╗
+║   │ Url  ║
+╟───┼──────╢
+║ ✔ │ OK   ║
+╟───┼──────╢
+║ ! │ [33mWARN[39m ║
+╟───┼──────╢
+║ ✖ │ [31mERR[39m  ║
+╚═══╧══════╝
+"
+`;
+
+exports[`Console Formatter Results Should output results without color if requested 1`] = `
+"╔═══╤══════╗
+║   │ Url  ║
+╟───┼──────╢
+║ ✔ │ OK   ║
+╟───┼──────╢
+║ ! │ WARN ║
+╟───┼──────╢
+║ ✖ │ ERR  ║
+╚═══╧══════╝
+"
+`;
