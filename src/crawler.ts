@@ -1,4 +1,4 @@
-import bb from 'bluebird';
+import pMap from 'p-map';
 import Emittery from 'emittery';
 import debug from 'debug';
 import Analysis from './analysis';
@@ -94,7 +94,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
   /**
    * Work through the queue, fetching requests and returning data for each request.
    *
-   * @returns {Promise<Bluebird<U[]>>}
+   * @param concurrency
    */
   async work(concurrency = 3): Promise<CrawlReport> {
     log(`Starting crawl of ${this.queue.length} urls`);
@@ -102,7 +102,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
     return {
       name: this.name,
       date: new Date(),
-      data: await bb.map(this.queue, doOne, { concurrency })
+      data: await pMap(this.queue, doOne, {concurrency})
     };
   }
 
