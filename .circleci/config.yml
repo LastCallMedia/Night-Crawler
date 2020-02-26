@@ -15,7 +15,7 @@ jobs:
           command: npm run check-types
       - run:
           name: "Jest"
-          command: npm run test -- --ci
+          command: npm run test -- --ci --reporters="default" --reporters="jest-junit"
           environment:
             JEST_JUNIT_OUTPUT: "/tmp/junit/jest.xml"
       - store_test_results:
