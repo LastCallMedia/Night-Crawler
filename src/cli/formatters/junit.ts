@@ -88,9 +88,9 @@ class TestSuite {
   }
 }
 
-function buildResults(results: Analysis['results']): XMLElement | void {
+function buildResults(results: Analysis['results']): XMLElement {
+  const suite = new TestSuite('Results');
   if (results.length) {
-    const suite = new TestSuite('Results');
     results.forEach(result => {
       const thisCase = new TestCase(result.url, undefined, result.time);
       thisCase.time = result.time / 1000;
@@ -101,14 +101,13 @@ function buildResults(results: Analysis['results']): XMLElement | void {
       }
       suite.addCase(thisCase);
     });
-
-    return suite.toXMLObj();
   }
+  return suite.toXMLObj();
 }
 
-function buildMetrics(metrics: Analysis['metrics']): XMLElement | void {
+function buildMetrics(metrics: Analysis['metrics']): XMLElement {
+  const suite = new TestSuite('Aggregates');
   if (metrics.size) {
-    const suite = new TestSuite('Aggregates');
     metrics.forEach((metric, className) => {
       const thisCase = new TestCase(className, metric.displayName);
       thisCase.output = metric.toString();
@@ -119,18 +118,17 @@ function buildMetrics(metrics: Analysis['metrics']): XMLElement | void {
         thisCase.error = true;
       }
     });
-
-    return suite.toXMLObj();
   }
+  return suite.toXMLObj();
 }
 
-export default function formatJUnit(analysis: Analysis): string | void {
+export default function formatJUnit(analysis: Analysis): string {
   const results = buildResults(analysis.results);
   const aggregates = buildMetrics(analysis.metrics);
 
   return xml(
     {
-      testsuites: [results, aggregates].filter(i => !!i)
+      testsuites: [results, aggregates]
     },
     { indent: '  ', declaration: true }
   );
