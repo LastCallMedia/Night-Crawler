@@ -1,8 +1,6 @@
 import formatJUnit from '../junit';
 import Analysis from '../../../analysis';
 import Number from '../../../metrics/Number';
-import fs from 'fs';
-import os from 'os';
 
 describe('JUnit formatter', function() {
   it('Should output a listing of results', function() {
@@ -18,14 +16,5 @@ describe('JUnit formatter', function() {
     a.addMetric('warn', new Number('WARN metric', 1, 2));
     a.addMetric('err', new Number('ERR metric', 2, 5));
     expect(formatJUnit(a)).toMatchSnapshot();
-  });
-  it('Should output to a file', function() {
-    const filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
-      Math.random() * 10000
-    )}`;
-    const a = new Analysis('test', new Date());
-    formatJUnit(a, { filename });
-    expect(fs.existsSync(filename)).toEqual(true);
-    fs.unlinkSync(filename);
   });
 });

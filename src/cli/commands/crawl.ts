@@ -107,7 +107,7 @@ export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
   }
 
   if (junit.length) {
-    formatJUnit(analysis, { filename: junit });
+    fs.writeFileSync(junit, formatJUnit(analysis), 'utf8');
   }
 
   if (analysis.hasFailures()) {
