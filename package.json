@@ -7,7 +7,6 @@
     "chalk": "^2.3.0",
     "debug": "^3.1.0",
     "emittery": "^0.5.1",
-    "events-async": "^1.2.1",
     "forever-agent": "^0.6.1",
     "ora": "^4.0.3",
     "p-map": "^3.0.0",
