@@ -10,8 +10,6 @@ type NativeDriverResponse = http.IncomingMessage & {
 
 export default class NativeDriver implements Driver<NativeDriverResponse> {
   opts: https.RequestOptions;
-  httpAgent?: http.Agent;
-  httpsAgent?: https.Agent;
   constructor(opts: https.RequestOptions = {}) {
     this.opts = opts;
   }
