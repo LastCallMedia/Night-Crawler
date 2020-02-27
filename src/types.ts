@@ -15,7 +15,7 @@ export type CrawlReport = {
   data: Array<CrawlResponse>;
 };
 
-export type DriverResponse = Record<string, unknown>;
+export type DriverResponse = unknown;
 
 export interface Driver<ResponseType extends DriverResponse = DriverResponse> {
   /**

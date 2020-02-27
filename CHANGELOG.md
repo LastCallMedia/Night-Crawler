@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Breaking
+- HTTP authentication has changed due to the default request driver changing. Now, follow the specifications of the Node http.request method when you construct the Driver.  See https://nodejs.org/api/http.html#http_http_request_url_options_callback
+- Some of the return values for the crawler methods have changed. See the example configuration for more information on how to write valid 2.x configuration.
+
 ## [1.2.0] - 2020-02-18
 ### Fixed
 - Fixes fetches that were successful but resulted in errors during the response.success event were causing response.error to be invoked.

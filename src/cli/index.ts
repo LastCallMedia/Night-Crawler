@@ -15,7 +15,9 @@ const loadCrawler: MiddlewareFunction<PreloadCrawlerArgs> = argv => {
   try {
     argv.crawler = requireCrawler(argv.config);
   } catch (e) {
-    throw new Error(`Unable to load crawler from ${argv.config}`);
+    throw new Error(
+      `Unable to load crawler from ${argv.config} due to error: ${e.toString()}`
+    );
   }
 };
 

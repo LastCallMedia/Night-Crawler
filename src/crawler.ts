@@ -2,7 +2,7 @@ import pMap from 'p-map';
 import Emittery from 'emittery';
 import debug from 'debug';
 import Analysis from './analysis';
-import RequestDriver from './driver/request';
+import NativeDriver from './driver/native';
 
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
@@ -44,7 +44,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
   queue: Array<CrawlRequest>;
   driver: Driver;
 
-  constructor(name: string, driver: Driver = new RequestDriver()) {
+  constructor(name: string, driver: Driver = new NativeDriver()) {
     super();
     this.name = name;
     this.queue = [];
@@ -102,7 +102,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
     return {
       name: this.name,
       date: new Date(),
-      data: await pMap(this.queue, doOne, {concurrency})
+      data: await pMap(this.queue, doOne, { concurrency })
     };
   }
 
