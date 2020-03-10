@@ -1,23 +1,9 @@
-import path from 'path';
-import chalk from 'chalk';
-import Crawler from '../crawler';
+import { TestResult } from '../testing/TestContext';
 
-export function requireCrawler(file: string | Crawler): Crawler {
-  if (typeof file === 'string') {
-    const resolved = path.resolve(process.cwd(), file);
-    return require(resolved);
-  }
-  // Allow full crawler instances to be passed in during testing.
-  return file;
+export function hasFailure(result: TestResult): boolean {
+  return Array.from(result.values()).some(r => !r);
 }
 
-export function consoleDisplayValue(level: number, value: string): string {
-  switch (level) {
-    case 2:
-      return chalk.red(value);
-    case 1:
-      return chalk.yellow(value);
-    default:
-      return value;
-  }
+export function pickFailures(result: TestResult): TestResult {
+  return new Map(Array.from(result.entries()).filter(([, result]) => !result));
 }

@@ -6,19 +6,19 @@ import Crawler from '../../../crawler';
 import DummyDriver from '../../../driver/dummy';
 import { FailedAnalysisError } from '../../errors';
 import formatJUnit from '../../formatters/junit';
-import Analysis from '../../../analysis';
 import yargs from 'yargs';
 
-import * as crawl from '../crawl';
+import * as crawlModule from '../crawl';
+import TestContext from '../../../testing/TestContext';
+import { CrawlerResponse } from '../../../types';
 
 jest.mock('../../formatters/junit', () => {
   return jest.fn(() => 'THIS IS A JUNIT REPORT');
 });
 jest.mock('../../formatters/console', () => {
-  return jest.fn(
-    (_, opts) =>
-      `CONSOLE_ANALYSIS:${opts.minLevel}${opts.color ? ':color' : ''}`
-  );
+  return jest.fn((a, b, opts) => {
+    return `CONSOLE_ANALYSIS:${opts.color ? 'color' : 'nocolor'}`;
+  });
 });
 
 const mockedJUnit = (formatJUnit as unknown) as jest.Mock<typeof formatJUnit>;
@@ -28,7 +28,7 @@ function runWithHandler(
   handler: (argv: CrawlCommandArgs) => void
 ): Promise<Record<string, unknown>> {
   let invoked = 0;
-  const cmd = Object.assign({}, crawl, {
+  const cmd = Object.assign({}, crawlModule, {
     handler: (argv: CrawlCommandArgs) => {
       invoked++;
       handler(argv);
@@ -82,86 +82,76 @@ describe('Crawl Handler', function() {
     stdout = new stream.PassThrough();
   });
 
-  it('Executes the crawl', function() {
-    let called = 0;
-    const crawler = new Crawler('');
-    crawler.on('setup', () => called++);
-
-    return handler({
-      stdout,
-      crawler
-    }).then(function() {
-      expect(called).toEqual(1);
-    });
+  it('Executes the crawl', async function() {
+    // eslint-disable-next-line
+    const crawl = jest.fn(async function*() {});
+    const crawler = new Crawler([]);
+    const tests = new TestContext();
+    crawler.crawl = crawl;
+    await handler({ stdout, crawler, tests, concurrency: 1 });
+    expect(crawl).toHaveBeenCalledWith(1);
   });
 
-  it('Displays output to indicate the success of the crawl', function() {
-    const crawler = new Crawler('', new DummyDriver());
-    crawler.on('setup', () => {
-      crawler.enqueue('http://example.com/');
-      crawler.enqueue('http://example.com/');
-    });
-
-    return handler({
-      stdout,
-      crawler
-    }).then(function() {
-      const output = stdout.read().toString();
-      expect(output).toMatchSnapshot();
-    });
+  it('Displays output to indicate the status of the crawl', async function() {
+    const crawler = new Crawler(
+      [{ url: 'http://example.com' }],
+      new DummyDriver()
+    );
+    await handler({ stdout, crawler, tests: new TestContext() });
+    const output = stdout.read().toString();
+    expect(output).toMatchSnapshot();
   });
 
-  it('Outputs analysis at the end of the crawl if the output is not silent', function() {
-    const crawler = new Crawler('', new DummyDriver());
-
-    return handler({
-      stdout,
-      crawler
-    }).then(function() {
-      expect(stdout.read().toString()).toContain('CONSOLE_ANALYSIS:1:color');
-    });
+  it('Outputs analysis at the end of the crawl if the output is not silent', async function() {
+    const crawler = new Crawler([], new DummyDriver());
+    const tests = new TestContext();
+    await handler({ stdout, crawler, tests });
+    expect(stdout.read().toString()).toContain('CONSOLE_ANALYSIS:color');
   });
 
-  it('Throws an error if the analysis contains failures', function() {
-    const crawler = new Crawler('', new DummyDriver());
-    crawler.on('analyze', function({ analysis }) {
-      analysis.addMetric('failing', {
-        level: 2,
-        value: 1,
-        displayName: 'failing'
-      });
+  it('Throws an error if the analysis contains failures', async function() {
+    const crawler = new Crawler(
+      [{ url: 'https://example.com' }],
+      new DummyDriver()
+    );
+    const tests = new TestContext();
+    tests.each('testing', () => {
+      throw new Error('test');
     });
+    await expect(handler({ stdout, crawler, tests })).rejects.toBeInstanceOf(
+      FailedAnalysisError
+    );
+  });
 
+  it('Should stop the crawl if setup fails', async function() {
+    const crawler = new Crawler(
+      // eslint-disable-next-line require-yield
+      (async function*(): AsyncIterable<CrawlerResponse> {
+        throw new Error('Oh no!');
+      })(),
+      new DummyDriver()
+    );
     const p = handler({
       stdout,
-      crawler
+      crawler,
+      tests: new TestContext()
     });
-    return expect(p).rejects.toBeInstanceOf(FailedAnalysisError);
-  });
-
-  it('Should stop the crawl if setup fails', function() {
-    const crawler = new Crawler('', new DummyDriver());
-    crawler.setup = jest.fn(() => Promise.reject('Oh no!'));
-    const p = handler({
-      stdout,
-      crawler
-    });
-    return expect(p).rejects.toBe('Oh no!');
+    return expect(p).rejects.toThrow('Oh no!');
   });
 
   it('Should save a junit report if requested', async function() {
     const filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
       Math.random() * 10000
     )}`;
-    const crawler = new Crawler('', new DummyDriver());
+    const crawler = new Crawler([], new DummyDriver());
 
     await handler({
       junit: filename,
       stdout,
-      crawler
+      crawler,
+      tests: new TestContext()
     });
-    expect(mockedJUnit).toHaveBeenCalledTimes(1);
-    expect(mockedJUnit.mock.calls[0][0]).toBeInstanceOf(Analysis);
+    expect(mockedJUnit).toHaveBeenCalledWith(new Map(), new Map());
     await expect(
       fs.promises.readFile(filename, { encoding: 'utf-8' })
     ).resolves.toEqual('THIS IS A JUNIT REPORT');
@@ -172,11 +162,12 @@ describe('Crawl Handler', function() {
     const filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
       Math.random() * 10000
     )}`;
-    const crawler = new Crawler('', new DummyDriver());
+    const crawler = new Crawler([], new DummyDriver());
     await handler({
       json: filename,
       stdout,
-      crawler
+      crawler,
+      tests: new TestContext()
     });
     await expect(fs.promises.stat(filename)).resolves.toBeTruthy();
     await fs.promises.unlink(filename);

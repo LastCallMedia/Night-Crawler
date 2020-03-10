@@ -1,6 +1,7 @@
 import yargs, { MiddlewareFunction } from 'yargs';
-import { requireCrawler } from './util';
 import Crawler from '../crawler';
+import path from 'path';
+import TestContext from '../testing/TestContext';
 
 interface PreloadCrawlerArgs {
   config: string;
@@ -9,11 +10,19 @@ interface PreloadCrawlerArgs {
 export interface ConfigArgs {
   config?: string;
   crawler: Crawler;
+  tests: TestContext;
 }
 
-const loadCrawler: MiddlewareFunction<PreloadCrawlerArgs> = argv => {
+function requireConfig(file: string): { crawler: Crawler; tests: TestContext } {
+  const resolved = path.resolve(process.cwd(), file);
+  return require(resolved);
+}
+
+const loadConfig: MiddlewareFunction<PreloadCrawlerArgs> = argv => {
   try {
-    argv.crawler = requireCrawler(argv.config);
+    const config = requireConfig(argv.config);
+    argv.crawler = config.crawler;
+    argv.tests = config.tests;
   } catch (e) {
     throw new Error(
       `Unable to load crawler from ${argv.config} due to error: ${e.toString()}`
@@ -26,6 +35,6 @@ yargs
     config: { type: 'string', default: './nightcrawler.js' }
   })
   .commandDir('commands')
-  .middleware(loadCrawler)
+  .middleware(loadConfig)
   .demandCommand(1, '')
   .help().argv;

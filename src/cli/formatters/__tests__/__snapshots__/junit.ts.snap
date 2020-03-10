@@ -3,36 +3,16 @@
 exports[`JUnit formatter Should output a listing of results 1`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
 <testsuites>
-  <testsuite name=\\"Results\\" tests=\\"3\\" failures=\\"1\\" errors=\\"1\\" skipped=\\"0\\" time=\\"0.03\\">
-    <testcase classname=\\"OK\\" time=\\"0.01\\"/>
-    <testcase classname=\\"WARN\\" time=\\"0.01\\">
-      <error message=\\"m1\\"/>
-    </testcase>
-    <testcase classname=\\"ERR\\" time=\\"0.01\\">
-      <failure message=\\"m1\\"/>
+  <testsuite name=\\"EachResults\\" tests=\\"2\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
+    <testcase classname=\\"ok\\" time=\\"0\\"/>
+    <testcase classname=\\"err\\" time=\\"0\\">
+      <failure message=\\"err\\"/>
     </testcase>
   </testsuite>
-  <testsuite name=\\"Aggregates\\" tests=\\"0\\" failures=\\"0\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
-  </testsuite>
-</testsuites>"
-`;
-
-exports[`JUnit formatter Should output aggregates, marked by level 1`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
-<testsuites>
-  <testsuite name=\\"Results\\" tests=\\"0\\" failures=\\"0\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
-  </testsuite>
-  <testsuite name=\\"Aggregates\\" tests=\\"3\\" failures=\\"1\\" errors=\\"1\\" skipped=\\"0\\" time=\\"0\\">
-    <testcase classname=\\"ok\\" time=\\"0\\" name=\\"OK metric\\">
-      <system-out><![CDATA[0]]></system-out>
-    </testcase>
-    <testcase classname=\\"warn\\" time=\\"0\\" name=\\"WARN metric\\">
-      <error/>
-      <system-out><![CDATA[2]]></system-out>
-    </testcase>
-    <testcase classname=\\"err\\" time=\\"0\\" name=\\"ERR metric\\">
+  <testsuite name=\\"AllResults\\" tests=\\"2\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
+    <testcase classname=\\"time\\" time=\\"0\\"/>
+    <testcase classname=\\"errors\\" time=\\"0\\">
       <failure/>
-      <system-out><![CDATA[5]]></system-out>
     </testcase>
   </testsuite>
 </testsuites>"
