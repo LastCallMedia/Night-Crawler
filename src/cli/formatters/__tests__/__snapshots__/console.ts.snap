@@ -3,11 +3,11 @@
 exports[`Console Formatter Should display even when there are no results 1`] = `
 "URL Results:
 ======
-[31mNo results to display[39m
+[32mNo results to display[39m
 
 All Requests:
 =======
-[31mNo results to display[39m"
+[32mNo results to display[39m"
 `;
 
 exports[`Console Formatter Should output results 1`] = `
@@ -16,9 +16,9 @@ exports[`Console Formatter Should output results 1`] = `
 ╔═══╤═════╤════════╗
 ║   │ Url │ Errors ║
 ╟───┼─────┼────────╢
-║ [32m✖[39m │ [32mok[39m  │        ║
+║ [32m✔[39m │ [32mok[39m  │        ║
 ╟───┼─────┼────────╢
-║ [31m✔[39m │ [31merr[39m │ [31m- err[39m  ║
+║ [31m✖[39m │ [31merr[39m │ [31m- err[39m  ║
 ╚═══╧═════╧════════╝
 
 
@@ -27,9 +27,9 @@ All Requests:
 ╔═══╤════════╗
 ║   │ Name   ║
 ╟───┼────────╢
-║ [31m✔[39m │ [31mtime[39m   ║
+║ [32m✔[39m │ [32mtime[39m   ║
 ╟───┼────────╢
-║ [32m✖[39m │ [32merrors[39m ║
+║ [31m✖[39m │ [31merrors[39m ║
 ╚═══╧════════╝
 "
 `;

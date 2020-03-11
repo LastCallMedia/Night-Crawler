@@ -34,8 +34,9 @@ interface ManyHandler {
   cb: (units: CrawlerUnit[]) => void;
 }
 
-export type TestResult = Map<string, boolean>;
-export type EachResults = Map<string, TestResult>;
+export type TestResult = { pass: true } | { pass: false; message: string };
+export type TestResultMap = Map<string, TestResult>;
+export type EachResultMap = Map<string, TestResultMap>;
 
 export default class TestContext {
   oneHandlers: OneHandler[];
@@ -68,26 +69,32 @@ export default class TestContext {
   ): this {
     return this.all(description, filterManyByGroup(group, cb));
   }
-  testUnit(unit: CrawlerUnit): TestResult {
+  testUnit(unit: CrawlerUnit): TestResultMap {
     return this.oneHandlers.reduce((results, handler) => {
       try {
         handler.cb(unit);
-        results.set(handler.description, true);
+        results.set(handler.description, { pass: true });
       } catch (e) {
-        results.set(handler.description, false);
+        results.set(handler.description, {
+          pass: false,
+          message: e.toString()
+        });
       }
       return results;
-    }, new Map<string, boolean>());
+    }, new Map<string, TestResult>());
   }
-  testUnits(units: CrawlerUnit[]): TestResult {
+  testUnits(units: CrawlerUnit[]): TestResultMap {
     return this.manyHandlers.reduce((results, handler) => {
       try {
         handler.cb(units);
-        results.set(handler.description, true);
+        results.set(handler.description, { pass: true });
       } catch (e) {
-        results.set(handler.description, false);
+        results.set(handler.description, {
+          pass: false,
+          message: e.toString()
+        });
       }
       return results;
-    }, new Map<string, boolean>());
+    }, new Map<string, TestResult>());
   }
 }

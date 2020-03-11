@@ -65,8 +65,8 @@ describe('TestContext', function() {
     expect(result).toEqual(
       new Map(
         Object.entries({
-          pass: true,
-          fail: false
+          pass: { pass: true },
+          fail: { pass: false, message: 'Error' }
         })
       )
     );
@@ -84,8 +84,8 @@ describe('TestContext', function() {
     expect(result).toEqual(
       new Map(
         Object.entries({
-          pass: true,
-          fail: false
+          pass: { pass: true },
+          fail: { pass: false, message: 'Error: Test' }
         })
       )
     );

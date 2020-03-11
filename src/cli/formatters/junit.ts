@@ -1,5 +1,5 @@
 import xml from 'xml';
-import { TestResult, EachResults } from '../../testing/TestContext';
+import { TestResultMap, EachResultMap } from '../../testing/TestContext';
 import { hasFailure, pickFailures } from '../util';
 
 type XMLAttributeObj = { [k: string]: number | string };
@@ -89,7 +89,7 @@ class TestSuite {
   }
 }
 
-function formatEachResults(results: EachResults): XMLElement {
+function formatEachResults(results: EachResultMap): XMLElement {
   const suite = new TestSuite('EachResults');
   Array.from(results.entries()).forEach(([url, result]) => {
     const thisCase = new TestCase(url);
@@ -101,7 +101,7 @@ function formatEachResults(results: EachResults): XMLElement {
   return suite.toXMLObj();
 }
 
-function formatAllResults(results: TestResult): XMLElement {
+function formatAllResults(results: TestResultMap): XMLElement {
   const suite = new TestSuite('AllResults');
   Array.from(results.entries()).forEach(([url, result]) => {
     const thisCase = new TestCase(url);
@@ -114,8 +114,8 @@ function formatAllResults(results: TestResult): XMLElement {
 }
 
 export default function formatJUnit(
-  eachResults: EachResults,
-  allResults: TestResult
+  eachResults: EachResultMap,
+  allResults: TestResultMap
 ): string {
   const each = formatEachResults(eachResults);
   const all = formatAllResults(allResults);

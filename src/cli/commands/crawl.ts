@@ -7,7 +7,7 @@ import formatConsole from '../formatters/console';
 import formatJUnit from '../formatters/junit';
 import { BuilderCallback } from 'yargs';
 import { ConfigArgs } from '../index';
-import { TestResult } from '../../testing/TestContext';
+import { EachResultMap } from '../../testing/TestContext';
 import { hasFailure } from '../util';
 
 const writeFileP = promisify(writeFile);
@@ -60,7 +60,7 @@ export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
     prefixText: 'Crawling'
   }).start('Starting');
 
-  const eachResults = new Map<string, TestResult>();
+  const eachResults: EachResultMap = new Map();
   const allUnits = [];
 
   for await (const unit of crawler.crawl(concurrency)) {

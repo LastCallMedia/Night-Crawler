@@ -1,20 +1,20 @@
 import formatJUnit from '../junit';
-import { TestResult } from '../../../testing/TestContext';
+import { TestResultMap, TestResult } from '../../../testing/TestContext';
 
-function r(obj: { [k: string]: boolean }): TestResult {
+function r(obj: { [k: string]: TestResult }): TestResultMap {
   return new Map(Object.entries(obj));
 }
 
 describe('JUnit formatter', function() {
   const each = new Map(
     Object.entries({
-      ok: r({ ok: true }),
-      err: r({ err: false })
+      ok: r({ ok: { pass: true } }),
+      err: r({ err: { pass: false, message: 'something failed' } })
     })
   );
   const all = r({
-    time: true,
-    errors: false
+    time: { pass: true },
+    errors: { pass: false, message: 'something failed' }
   });
 
   it('Should output a listing of results', function() {

@@ -1,25 +1,25 @@
 import { pickFailures } from '../util';
 import { table } from 'table';
-import { TestResult, EachResults } from '../../testing/TestContext';
+import { TestResultMap, EachResultMap } from '../../testing/TestContext';
 import { hasFailure } from '../util';
 import chalk from 'chalk';
 
 function formatValue(ok: boolean, value: string): string {
-  return ok ? chalk.red(value) : chalk.green(value);
+  return ok ? chalk.green(value) : chalk.red(value);
 }
 
 function formatStatus(ok: boolean): string {
-  return ok ? formatValue(true, '✔') : formatValue(false, '✖');
+  return formatValue(ok, ok ? '✔' : '✖');
 }
 
-function buildEachResults(results: EachResults): [string, string, string][] {
+function buildEachResults(results: EachResultMap): [string, string, string][] {
   return Array.from(results.entries()).map(([url, result]) => {
-    const hasFailures = hasFailure(result);
+    const pass = !hasFailure(result);
     return [
-      formatStatus(hasFailures),
-      formatValue(hasFailures, url),
+      formatStatus(pass),
+      formatValue(pass, url),
       formatValue(
-        hasFailures,
+        pass,
         Array.from(pickFailures(result).keys())
           .map(d => `- ${d}`)
           .join('\n')
@@ -28,7 +28,7 @@ function buildEachResults(results: EachResults): [string, string, string][] {
   });
 }
 
-export function formatEachResults(results: EachResults): string {
+export function formatEachResults(results: EachResultMap): string {
   const rows = buildEachResults(results);
   if (rows.length) {
     return table([['', 'Url', 'Errors']].concat(rows));
@@ -36,13 +36,13 @@ export function formatEachResults(results: EachResults): string {
   return formatValue(true, 'No results to display');
 }
 
-function buildAllResults(results: TestResult): Array<[string, string]> {
+function buildAllResults(results: TestResultMap): Array<[string, string]> {
   return Array.from(results, ([description, result]) => {
-    return [formatStatus(result), formatValue(result, description)];
+    return [formatStatus(result.pass), formatValue(result.pass, description)];
   });
 }
 
-export function formatAllResults(metrics: TestResult): string {
+export function formatAllResults(metrics: TestResultMap): string {
   const rows = buildAllResults(metrics);
   if (rows.length) {
     return table([['', 'Name']].concat(rows));
@@ -51,8 +51,8 @@ export function formatAllResults(metrics: TestResult): string {
 }
 
 export default function format(
-  eachResults: EachResults,
-  allResults: TestResult
+  eachResults: EachResultMap,
+  allResults: TestResultMap
 ): string {
   const each = formatEachResults(eachResults);
   const all = formatAllResults(allResults);

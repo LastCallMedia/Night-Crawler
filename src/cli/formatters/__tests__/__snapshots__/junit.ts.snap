@@ -9,11 +9,9 @@ exports[`JUnit formatter Should output a listing of results 1`] = `
       <failure message=\\"err\\"/>
     </testcase>
   </testsuite>
-  <testsuite name=\\"AllResults\\" tests=\\"2\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
+  <testsuite name=\\"AllResults\\" tests=\\"2\\" failures=\\"0\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
     <testcase classname=\\"time\\" time=\\"0\\"/>
-    <testcase classname=\\"errors\\" time=\\"0\\">
-      <failure/>
-    </testcase>
+    <testcase classname=\\"errors\\" time=\\"0\\"/>
   </testsuite>
 </testsuites>"
 `;
