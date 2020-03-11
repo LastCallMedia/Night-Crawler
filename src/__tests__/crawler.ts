@@ -39,6 +39,12 @@ describe('Crawler', () => {
   });
 
   it('Should respect concurrency in crawling', async () => {
+    /**
+     * This test asserts that delays in the driver do not cause pileup.
+     * We add a slight delay to each request and verify that they are
+     * being pulled from the request iterable at a rate consistent with
+     * the driver delay.
+     */
     const requests = (async function*(): AsyncIterable<CrawlerRequest> {
       for (let i = 0; i < 4; i++) {
         yield {
@@ -56,6 +62,36 @@ describe('Crawler', () => {
     expect(crawl[1].request.created).toBeLessThan(start + 10);
     expect(crawl[2].request.created).toBeGreaterThan(start + 200);
     expect(crawl[3].request.created).toBeGreaterThan(start + 200);
+  });
+
+  it('Should respect concurrency in crawling', async () => {
+    /**
+     * This test checks to make sure we are respecting concurrency settings.
+     * It uses the request iterable as a proxy for making sure we don't have
+     * too many driver requests in flight at once. This works, because until
+     * a request has been yielded, it can't possibly be in flight.
+     */
+    let yielded = 0;
+    const requests = (async function*(): AsyncIterable<CrawlerRequest> {
+      for (let i = 0; i < 4; i++) {
+        yielded++;
+        yield {
+          url: i.toString(),
+          created: performance.now() as number
+        };
+      }
+    })();
+    const c = new Crawler(requests, new DummyDriver());
+    const iterator = c.crawl(2);
+    await iterator.next();
+    // When we've consumed 1 item, there should be 1 resolved, 2 in the pool.
+    expect(yielded).toEqual(3);
+    await iterator.next();
+    // When we've consumed 2 items, there should be 2 resolved, 2 in the pool.
+    expect(yielded).toEqual(3);
+    await iterator.next();
+    // When we've consumed 3 items, there should be 3 resolved, 1 in the pool.
+    expect(yielded).toEqual(4);
   });
 
   it('Should return errors via the generator', async () => {

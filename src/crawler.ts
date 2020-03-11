@@ -1,5 +1,6 @@
 import debug from 'debug';
 import NativeDriver from './driver/native';
+import { toAsyncIterable } from './cli/util';
 
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
@@ -12,10 +13,10 @@ type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
 
 export default class Crawler {
   driver: Driver;
-  iterator: RequestIterable;
+  iterator: AsyncIterable<CrawlerRequest>;
 
   constructor(requests: RequestIterable, driver: Driver = new NativeDriver()) {
-    this.iterator = requests;
+    this.iterator = toAsyncIterable(requests);
     this.driver = driver;
   }
 
@@ -33,32 +34,38 @@ export default class Crawler {
       buffer.push(unit);
     };
 
-    for await (const crawlerRequest of this.iterator) {
-      log(`Sending ${crawlerRequest.url}`);
-      const prom = this._fetch(crawlerRequest).then(
-        collectToBuffer,
-        collectToBuffer
-      );
-      prom.finally(() => pool.delete(prom));
-      pool.add(prom);
+    const iterator = this.iterator[Symbol.asyncIterator]();
 
-      // When we hit max concurrency, stop and wait for the pool to complete.
-      if (pool.size >= concurrency) {
-        // Wait for a promise to resolve before continuing.
-        await Promise.race(pool);
+    const queueOne = async (): Promise<void> => {
+      const next = await iterator.next();
+      if (next.value) {
+        const prom = this._fetch(next.value)
+          .then(collectToBuffer, collectToBuffer)
+          .finally(() => pool.delete(prom));
+        pool.add(prom);
       }
-      // Yield all of the buffer results that have accumulated.
+    };
+
+    // Fill up the pool with N promises to start.
+    const initPromises = [];
+    for (let i = 0; i < concurrency; i++) {
+      initPromises.push(queueOne());
+    }
+    await Promise.all(initPromises);
+
+    // Work the promise pool until it's empty, adding replacements
+    // for every promise we resolve. As promises resolve, results
+    // will be pushed onto the buffer, which we then yield.
+    while (pool.size > 0) {
+      await Promise.race(pool).then(queueOne);
       while (buffer.length > 0) {
         yield buffer.pop() as CrawlerUnit;
       }
     }
-    // Finish processing the rest of the queue, yielding results as they are ready.
-    while (pool.size > 0) {
-      await Promise.race(pool);
-      // Yield all of the buffer results that have accumulated.
-      while (buffer.length > 0) {
-        yield buffer.pop() as CrawlerUnit;
-      }
+
+    // Yield any leftover buffered results.
+    while (buffer.length > 0) {
+      yield buffer.pop() as CrawlerUnit;
     }
   }
 
