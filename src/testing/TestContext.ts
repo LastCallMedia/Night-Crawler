@@ -34,8 +34,10 @@ interface ManyHandler {
   cb: (units: CrawlerUnit[]) => void;
 }
 
-export type TestResult = { pass: true } | { pass: false; message: string };
-export type TestResultMap = Map<string, TestResult>;
+export type PassingResult = { pass: true };
+export type FailingResult = { pass: false; message: string };
+export type TestResult = PassingResult | FailingResult;
+export type TestResultMap<T extends TestResult = TestResult> = Map<string, T>;
 export type EachResultMap = Map<string, TestResultMap>;
 
 export default class TestContext {

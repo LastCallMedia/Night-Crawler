@@ -3,15 +3,21 @@
 exports[`JUnit formatter Should output a listing of results 1`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
 <testsuites>
-  <testsuite name=\\"EachResults\\" tests=\\"2\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
+  <testsuite name=\\"ok\\" tests=\\"1\\" failures=\\"0\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
     <testcase classname=\\"ok\\" time=\\"0\\"/>
+  </testsuite>
+  <testsuite name=\\"err\\" tests=\\"1\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
     <testcase classname=\\"err\\" time=\\"0\\">
-      <failure message=\\"err\\"/>
+      <failure/>
+      <system-out><![CDATA[something failed]]></system-out>
     </testcase>
   </testsuite>
-  <testsuite name=\\"AllResults\\" tests=\\"2\\" failures=\\"0\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
+  <testsuite name=\\"AllResults\\" tests=\\"2\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
     <testcase classname=\\"time\\" time=\\"0\\"/>
-    <testcase classname=\\"errors\\" time=\\"0\\"/>
+    <testcase classname=\\"errors\\" time=\\"0\\">
+      <failure/>
+      <system-out><![CDATA[something failed]]></system-out>
+    </testcase>
   </testsuite>
 </testsuites>"
 `;

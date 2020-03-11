@@ -1,61 +1,33 @@
-import { pickFailures } from '../util';
-import { table } from 'table';
-import { TestResultMap, EachResultMap } from '../../testing/TestContext';
+import { TestResultMap } from '../../testing/TestContext';
 import { hasFailure } from '../util';
 import chalk from 'chalk';
+import wrap from 'wrap-ansi';
+import indent from 'indent-string';
 
-function formatValue(ok: boolean, value: string): string {
-  return ok ? chalk.green(value) : chalk.red(value);
-}
+type Options = { columns: number };
+const defaults: Options = { columns: 60 };
 
-function formatStatus(ok: boolean): string {
-  return formatValue(ok, ok ? '✔' : '✖');
-}
-
-function buildEachResults(results: EachResultMap): [string, string, string][] {
-  return Array.from(results.entries()).map(([url, result]) => {
-    const pass = !hasFailure(result);
-    return [
-      formatStatus(pass),
-      formatValue(pass, url),
-      formatValue(
-        pass,
-        Array.from(pickFailures(result).keys())
-          .map(d => `- ${d}`)
-          .join('\n')
-      )
-    ];
-  });
-}
-
-export function formatEachResults(results: EachResultMap): string {
-  const rows = buildEachResults(results);
-  if (rows.length) {
-    return table([['', 'Url', 'Errors']].concat(rows));
-  }
-  return formatValue(true, 'No results to display');
-}
-
-function buildAllResults(results: TestResultMap): Array<[string, string]> {
-  return Array.from(results, ([description, result]) => {
-    return [formatStatus(result.pass), formatValue(result.pass, description)];
-  });
-}
-
-export function formatAllResults(metrics: TestResultMap): string {
-  const rows = buildAllResults(metrics);
-  if (rows.length) {
-    return table([['', 'Name']].concat(rows));
-  }
-  return formatValue(true, 'No results to display');
-}
-
-export default function format(
-  eachResults: EachResultMap,
-  allResults: TestResultMap
+export default function formatResult(
+  url: string,
+  result: TestResultMap,
+  options: Partial<Options> = {}
 ): string {
-  const each = formatEachResults(eachResults);
-  const all = formatAllResults(allResults);
+  const opts: Options = { ...options, ...defaults };
+  if (!hasFailure(result)) {
+    return `${chalk.bgGreen('PASS')} ${url}\n`;
+  }
+  const detail = Array.from(result)
+    .map(([description, result]) => {
+      if (result.pass) {
+        return indent(wrap(`* ${chalk.green(description)}`, opts.columns), 2);
+      }
+      return (
+        indent(wrap(`* ${chalk.red(description)}`, opts.columns), 2) +
+        '\n' +
+        indent(wrap(result.message, opts.columns), 6)
+      );
+    })
+    .join('\n');
 
-  return `URL Results:\n======\n${each}\n\nAll Requests:\n=======\n${all}`;
+  return `${chalk.bgRed('FAIL')} ${url}\n${detail}\n`;
 }

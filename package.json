@@ -4,13 +4,12 @@
   "main": "dist/index.js",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^2.3.0",
-    "debug": "^3.1.0",
-    "ora": "^4.0.3",
-    "p-map": "^3.0.0",
-    "table": "^5.4.6",
-    "xml": "^1.0.1",
-    "yargs": "^15.1.0"
+    "chalk": "^2.0.0",
+    "debug": "^3.0.0",
+    "indent-string": "^4.0.0",
+    "wrap-ansi": "^6.0.0",
+    "xml": "^1.0.0",
+    "yargs": "^15.0.0"
   },
   "bin": {
     "nightcrawler": "bin/nightcrawler"
@@ -22,11 +21,10 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.8.3",
-    "@types/bluebird": "^3.5.29",
     "@types/debug": "^4.1.5",
     "@types/jest": "^25.1.2",
     "@types/node": "^13.7.2",
-    "@types/table": "^4.0.7",
+    "@types/wrap-ansi": "^3.0.0",
     "@types/xml": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^2.21.0",
     "@typescript-eslint/parser": "^2.21.0",
