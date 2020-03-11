@@ -21,19 +21,19 @@ describe('Console Formatter', function() {
 
   it('Should output results for each URL', function() {
     expect(format('http://example.com', pass, opts)).toMatchInlineSnapshot(`
-      "PASS http://example.com
+      "[42mPASS[49m http://example.com
       "
     `);
     expect(format('http://example.com', fail, opts)).toMatchInlineSnapshot(`
-      "FAIL http://example.com
-        * notok
+      "[41mFAIL[49m http://example.com
+        * [31mnotok[39m
             There was an error.
       "
     `);
     expect(format('http://example.com', mix, opts)).toMatchInlineSnapshot(`
-      "FAIL http://example.com
-        * ok
-        * notok
+      "[41mFAIL[49m http://example.com
+        * [32mok[39m
+        * [31mnotok[39m
             something failed
       "
     `);

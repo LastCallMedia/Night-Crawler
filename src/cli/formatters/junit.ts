@@ -1,6 +1,5 @@
 import xml from 'xml';
 import { TestResultMap, EachResultMap } from '../../testing/TestContext';
-import { hasFailure, pickFailures } from '../util';
 
 type XMLAttributeObj = { [k: string]: number | string };
 type XMLElement = { [k: string]: number | string | XMLElement | XMLElement[] };
@@ -89,24 +88,13 @@ class TestSuite {
   }
 }
 
-function formatEachResults(results: EachResultMap): XMLElement {
-  const suite = new TestSuite('EachResults');
+function formatResultSet(name: string, results: TestResultMap): XMLElement {
+  const suite = new TestSuite(name);
   Array.from(results.entries()).forEach(([url, result]) => {
     const thisCase = new TestCase(url);
-    if (hasFailure(result)) {
-      thisCase.failure = Array.from(pickFailures(result).keys()).join('\n');
-    }
-    suite.addCase(thisCase);
-  });
-  return suite.toXMLObj();
-}
-
-function formatAllResults(results: TestResultMap): XMLElement {
-  const suite = new TestSuite('AllResults');
-  Array.from(results.entries()).forEach(([url, result]) => {
-    const thisCase = new TestCase(url);
-    if (!result) {
+    if (!result.pass) {
       thisCase.failure = true;
+      thisCase.output = result.message;
     }
     suite.addCase(thisCase);
   });
@@ -117,12 +105,13 @@ export default function formatJUnit(
   eachResults: EachResultMap,
   allResults: TestResultMap
 ): string {
-  const each = formatEachResults(eachResults);
-  const all = formatAllResults(allResults);
-
+  const suites = Array.from(eachResults).map(([url, resultSet]) =>
+    formatResultSet(url, resultSet)
+  );
+  suites.push(formatResultSet('AllResults', allResults));
   return xml(
     {
-      testsuites: [each, all]
+      testsuites: suites
     },
     { indent: '  ', declaration: true }
   );
