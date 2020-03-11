@@ -6,22 +6,36 @@ function r(obj: { [k: string]: TestResult }): TestResultMap {
 }
 
 describe('Console Formatter', function() {
-  const each = new Map(
-    Object.entries({
-      ok: r({ ok: { pass: true } }),
-      err: r({ err: { pass: false, message: 'failed' } })
-    })
-  );
-  const all = r({
-    time: { pass: true },
-    errors: { pass: false, message: 'something failed' }
+  const pass = r({
+    ok: { pass: true }
+  });
+  const fail = r({
+    notok: { pass: false, message: 'There was an error.' }
+  });
+  const mix = r({
+    ok: { pass: true },
+    notok: { pass: false, message: 'something failed' }
   });
 
-  it('Should output results', function() {
-    expect(format(each, all)).toMatchSnapshot();
-  });
+  const opts = { columns: 60 };
 
-  it('Should display even when there are no results', function() {
-    expect(format(new Map(), new Map())).toMatchSnapshot();
+  it('Should output results for each URL', function() {
+    expect(format('http://example.com', pass, opts)).toMatchInlineSnapshot(`
+      "PASS http://example.com
+      "
+    `);
+    expect(format('http://example.com', fail, opts)).toMatchInlineSnapshot(`
+      "FAIL http://example.com
+        * notok
+            There was an error.
+      "
+    `);
+    expect(format('http://example.com', mix, opts)).toMatchInlineSnapshot(`
+      "FAIL http://example.com
+        * ok
+        * notok
+            something failed
+      "
+    `);
   });
 });

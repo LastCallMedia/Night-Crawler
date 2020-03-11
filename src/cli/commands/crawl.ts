@@ -1,9 +1,7 @@
-import ora from 'ora';
-import { EOL } from 'os';
 import { writeFile } from 'fs';
 import { promisify } from 'util';
 import { FailedAnalysisError } from '../errors';
-import formatConsole from '../formatters/console';
+import format from '../formatters/console';
 import formatJUnit from '../formatters/junit';
 import { BuilderCallback } from 'yargs';
 import { ConfigArgs } from '../index';
@@ -17,7 +15,7 @@ export interface CrawlCommandArgs extends ConfigArgs {
   silent?: boolean;
   json?: string;
   junit?: string;
-  stdout?: NodeJS.WritableStream;
+  stdout?: NodeJS.WritableStream & { columns: number };
 }
 
 export const command = 'crawl [crawlerfile]';
@@ -55,23 +53,19 @@ export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = yargs => {
 export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
   const { crawler, tests, json = '', junit = '', concurrency = 3 } = argv;
   const stdout = argv.stdout ?? process.stdout;
-  const spinner = ora({
-    stream: stdout,
-    prefixText: 'Crawling'
-  }).start('Starting');
 
   const eachResults: EachResultMap = new Map();
   const allUnits = [];
-
   for await (const unit of crawler.crawl(concurrency)) {
-    eachResults.set(unit.request.url, tests.testUnit(unit));
+    const result = tests.testUnit(unit);
+    stdout.write(format(unit.request.url, result, { columns: stdout.columns }));
+
+    eachResults.set(unit.request.url, result);
     allUnits.push(unit);
-    spinner.text = `Crawled ${allUnits.length}`;
   }
   const allResults = tests.testUnits(allUnits);
-  spinner.succeed('Finished Crawling');
 
-  stdout.write(formatConsole(eachResults, allResults) + EOL);
+  stdout.write(format('All Requests', allResults, { columns: stdout.columns }));
 
   if (json.length) {
     await writeFileP(

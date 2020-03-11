@@ -1,8 +1,3 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Crawl Handler Displays output to indicate the status of the crawl 1`] = `
-"- Starting
-Crawling [32m✔[39m Finished Crawling
-CONSOLE_ANALYSIS
-"
-`;
+exports[`Crawl Handler Displays output to indicate the status of the crawl 1`] = `"CONSOLE_ANALYSISCONSOLE_ANALYSIS"`;

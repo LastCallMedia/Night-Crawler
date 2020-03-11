@@ -74,10 +74,19 @@ describe('Crawl Command', function() {
   });
 });
 
+class MockTTY extends stream.PassThrough {
+  columns: number;
+  constructor() {
+    super();
+    this.columns = 60;
+  }
+}
+
 describe('Crawl Handler', function() {
-  let stdout: stream.PassThrough;
+  let stdout: MockTTY;
+
   beforeEach(function() {
-    stdout = new stream.PassThrough();
+    stdout = new MockTTY();
   });
 
   it('Executes the crawl', async function() {
