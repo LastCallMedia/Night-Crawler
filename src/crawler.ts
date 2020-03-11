@@ -1,53 +1,22 @@
-import pMap from 'p-map';
-import Emittery from 'emittery';
 import debug from 'debug';
-import Analysis from './analysis';
 import NativeDriver from './driver/native';
+import { toAsyncIterable } from './cli/util';
 
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
 
-import {
-  Driver,
-  DriverResponse,
-  CrawlRequest,
-  CrawlResponse,
-  CrawlReport
-} from './types';
+import { Driver, CrawlerRequest, CrawlerUnit } from './types';
 
-const normalizeRequest = (req: CrawlRequest | string): CrawlRequest =>
-  typeof req === 'string' ? { url: req } : req;
+type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
+  | Iterable<T>
+  | AsyncIterable<T>;
 
-type ResponseSuccessEvent = {
-  request: CrawlRequest;
-  response: DriverResponse;
-  data: CrawlResponse;
-};
-type ResponseErrorEvent = {
-  request: CrawlRequest;
-  error: Error;
-  data: CrawlResponse;
-};
-type AnalysisEvent = {
-  report: CrawlReport;
-  analysis: Analysis;
-};
-type EmitteryEvents = {
-  setup: Crawler;
-  'response.success': ResponseSuccessEvent;
-  'response.error': ResponseErrorEvent;
-  analyze: AnalysisEvent;
-};
-
-export default class Crawler extends Emittery.Typed<EmitteryEvents> {
-  name: string;
-  queue: Array<CrawlRequest>;
+export default class Crawler {
   driver: Driver;
+  iterator: AsyncIterable<CrawlerRequest>;
 
-  constructor(name: string, driver: Driver = new NativeDriver()) {
-    super();
-    this.name = name;
-    this.queue = [];
+  constructor(requests: RequestIterable, driver: Driver = new NativeDriver()) {
+    this.iterator = toAsyncIterable(requests);
     this.driver = driver;
   }
 
@@ -58,52 +27,46 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    *
    * @returns {Promise.<Bluebird.<U[]>>}
    */
-  async crawl(concurrency = 3): Promise<CrawlReport> {
-    await this.setup();
-    return this.work(concurrency);
-  }
-
-  /**
-   * Invoke setup events.
-   *
-   * @returns {Promise<Bluebird<Array>|Bluebird<function(*, *=)>>}
-   */
-  async setup(): Promise<void> {
-    log(`Starting setup`);
-    // Always reset the queue before beginning.
-    this.queue = [];
-    try {
-      await this.emit('setup', this);
-      return;
-    } catch (e) {
-      return Promise.reject(`Setup failed with an error: ${e.toString()}`);
-    }
-  }
-
-  /**
-   * Add a new crawl request to the queue.
-   *
-   * @param req
-   * @returns {Crawler}
-   */
-  enqueue(req: CrawlRequest | string): this {
-    this.queue.push(normalizeRequest(req));
-    return this;
-  }
-
-  /**
-   * Work through the queue, fetching requests and returning data for each request.
-   *
-   * @param concurrency
-   */
-  async work(concurrency = 3): Promise<CrawlReport> {
-    log(`Starting crawl of ${this.queue.length} urls`);
-    const doOne = (cr: CrawlRequest): Promise<CrawlResponse> => this._fetch(cr);
-    return {
-      name: this.name,
-      date: new Date(),
-      data: await pMap(this.queue, doOne, { concurrency })
+  async *crawl(concurrency = 3): AsyncGenerator<CrawlerUnit> {
+    const pool = new Set<Promise<unknown>>();
+    const buffer: CrawlerUnit[] = [];
+    const collectToBuffer = (unit: CrawlerUnit): void => {
+      buffer.push(unit);
     };
+
+    const iterator = this.iterator[Symbol.asyncIterator]();
+
+    const queueOne = async (): Promise<void> => {
+      const next = await iterator.next();
+      if (next.value) {
+        const prom = this._fetch(next.value)
+          .then(collectToBuffer, collectToBuffer)
+          .finally(() => pool.delete(prom));
+        pool.add(prom);
+      }
+    };
+
+    // Fill up the pool with N promises to start.
+    const initPromises = [];
+    for (let i = 0; i < concurrency; i++) {
+      initPromises.push(queueOne());
+    }
+    await Promise.all(initPromises);
+
+    // Work the promise pool until it's empty, adding replacements
+    // for every promise we resolve. As promises resolve, results
+    // will be pushed onto the buffer, which we then yield.
+    while (pool.size > 0) {
+      await Promise.race(pool).then(queueOne);
+      while (buffer.length > 0) {
+        yield buffer.pop() as CrawlerUnit;
+      }
+    }
+
+    // Yield any leftover buffered results.
+    while (buffer.length > 0) {
+      yield buffer.pop() as CrawlerUnit;
+    }
   }
 
   /**
@@ -112,82 +75,21 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    * @param req
    * @returns {Promise.<T>}
    */
-  async _fetch(req: CrawlRequest): Promise<CrawlResponse> {
+  async _fetch(req: CrawlerRequest): Promise<CrawlerUnit> {
     log(`Fetching ${req.url}`);
-    let res;
 
     try {
-      res = await this.driver.fetch(req);
+      const res = await this.driver.fetch(req);
+      return {
+        request: req,
+        response: res
+      };
     } catch (err) {
-      try {
-        return await this._collectError(req, err);
-      } catch (err) {
-        return Promise.reject(
-          `An error was caught during processing of a failure result: ${err.toString()}`
-        );
-      }
+      error(`Received error fetching ${req.url}`);
+      return {
+        error: err,
+        request: req
+      };
     }
-
-    try {
-      return await this._collectSuccess(req, res);
-    } catch (err) {
-      return Promise.reject(
-        `An error was caught during processing of a successful result: ${err.toString()}`
-      );
-    }
-  }
-
-  /**
-   * Collect a report about a successful response.
-   *
-   * @param crawlRequest
-   * @param response
-   * @returns {Promise.<*>}
-   */
-  async _collectSuccess(
-    crawlRequest: CrawlRequest,
-    response: DriverResponse
-  ): Promise<CrawlResponse> {
-    log(`Success on ${crawlRequest.url}`);
-
-    const data = Object.assign(
-      {},
-      crawlRequest,
-      { error: false },
-      this.driver.collect(response)
-    );
-    await this.emit('response.success', {
-      request: crawlRequest,
-      response,
-      data
-    });
-    return data;
-  }
-
-  /**
-   * Collect a report about an error response.
-   *
-   * @param crawlRequest
-   * @param err
-   * @returns {Promise.<*>}
-   */
-  async _collectError(
-    crawlRequest: CrawlRequest,
-    err: Error
-  ): Promise<CrawlResponse> {
-    error(`Error on ${crawlRequest.url}: ${err.toString()}`);
-    const data = Object.assign({}, crawlRequest, { error: true });
-    await this.emit('response.error', {
-      error: err,
-      request: crawlRequest,
-      data
-    });
-    return data;
-  }
-
-  async analyze(report: CrawlReport): Promise<Analysis> {
-    const analysis = new Analysis(report.name, report.date);
-    await this.emit('analyze', { report, analysis });
-    return analysis;
   }
 }

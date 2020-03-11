@@ -1,21 +1,37 @@
-import { Driver, CrawlRequest, DriverResponse } from '../types';
+import { Driver, CrawlerRequest, CrawlerResponse } from '../types';
+import { performance } from 'perf_hooks';
 
-type DummyResponse = DriverResponse & Record<string, unknown>;
+type DummyResponse = {
+  statusCode: number;
+  time: number;
+};
+
+function delayResolve<T>(value: T, timeout: number): Promise<T> {
+  return new Promise<T>(resolve => {
+    setTimeout(() => resolve(value), timeout);
+  });
+}
+function delayReject<T>(value: unknown, timeout: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    setTimeout(() => reject(value), timeout);
+  });
+}
 
 /**
  * Dummy driver for use in testing.
  */
-export default class DummyDriver implements Driver<DummyResponse> {
-  fetch(req: CrawlRequest): Promise<DummyResponse> {
+export default class DummyDriver implements Driver {
+  fetch(
+    req: CrawlerRequest & { shouldFail?: string }
+  ): Promise<CrawlerResponse> {
+    const start = performance.now();
+    const delay = 'delay' in req ? parseInt(req.delay as string) : 0;
     if ('shouldFail' in req && req.shouldFail) {
-      const message = req.shouldFail as string;
-      return Promise.reject(new Error(message.toString()));
+      return delayReject<DummyResponse>(req.shouldFail, delay);
     }
-    return Promise.resolve(req);
-  }
-  collect(): { driverCollected: boolean } {
-    return {
-      driverCollected: true
-    };
+    return delayResolve<DummyResponse>(
+      { statusCode: 200, time: performance.now() - start },
+      delay
+    );
   }
 }

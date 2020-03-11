@@ -1,5 +1,6 @@
-import Analysis from '../../analysis';
 import xml from 'xml';
+import { TestResultMap, EachResultMap } from '../../testing/TestContext';
+import { hasFailure, pickFailures } from '../util';
 
 type XMLAttributeObj = { [k: string]: number | string };
 type XMLElement = { [k: string]: number | string | XMLElement | XMLElement[] };
@@ -88,47 +89,40 @@ class TestSuite {
   }
 }
 
-function buildResults(results: Analysis['results']): XMLElement {
-  const suite = new TestSuite('Results');
-  if (results.length) {
-    results.forEach(result => {
-      const thisCase = new TestCase(result.url, undefined, result.time);
-      thisCase.time = result.time / 1000;
-      if (result.level === 2) {
-        thisCase.failure = result.message;
-      } else if (result.level === 1) {
-        thisCase.error = result.message;
-      }
-      suite.addCase(thisCase);
-    });
-  }
+function formatEachResults(results: EachResultMap): XMLElement {
+  const suite = new TestSuite('EachResults');
+  Array.from(results.entries()).forEach(([url, result]) => {
+    const thisCase = new TestCase(url);
+    if (hasFailure(result)) {
+      thisCase.failure = Array.from(pickFailures(result).keys()).join('\n');
+    }
+    suite.addCase(thisCase);
+  });
   return suite.toXMLObj();
 }
 
-function buildMetrics(metrics: Analysis['metrics']): XMLElement {
-  const suite = new TestSuite('Aggregates');
-  if (metrics.size) {
-    metrics.forEach((metric, className) => {
-      const thisCase = new TestCase(className, metric.displayName);
-      thisCase.output = metric.toString();
-      suite.addCase(thisCase);
-      if (metric.level === 2) {
-        thisCase.failure = true;
-      } else if (metric.level === 1) {
-        thisCase.error = true;
-      }
-    });
-  }
+function formatAllResults(results: TestResultMap): XMLElement {
+  const suite = new TestSuite('AllResults');
+  Array.from(results.entries()).forEach(([url, result]) => {
+    const thisCase = new TestCase(url);
+    if (!result) {
+      thisCase.failure = true;
+    }
+    suite.addCase(thisCase);
+  });
   return suite.toXMLObj();
 }
 
-export default function formatJUnit(analysis: Analysis): string {
-  const results = buildResults(analysis.results);
-  const aggregates = buildMetrics(analysis.metrics);
+export default function formatJUnit(
+  eachResults: EachResultMap,
+  allResults: TestResultMap
+): string {
+  const each = formatEachResults(eachResults);
+  const all = formatAllResults(allResults);
 
   return xml(
     {
-      testsuites: [results, aggregates]
+      testsuites: [each, all]
     },
     { indent: '  ', declaration: true }
   );

@@ -1,14 +1,16 @@
 import ora from 'ora';
 import { EOL } from 'os';
-import fs from 'fs';
+import { writeFile } from 'fs';
+import { promisify } from 'util';
 import { FailedAnalysisError } from '../errors';
 import formatConsole from '../formatters/console';
 import formatJUnit from '../formatters/junit';
 import { BuilderCallback } from 'yargs';
-import Crawler from '../../crawler';
 import { ConfigArgs } from '../index';
-import { CrawlReport } from '../../types';
-import Analysis from '../../analysis';
+import { EachResultMap } from '../../testing/TestContext';
+import { hasFailure } from '../util';
+
+const writeFileP = promisify(writeFile);
 
 export interface CrawlCommandArgs extends ConfigArgs {
   concurrency?: number;
@@ -18,49 +20,9 @@ export interface CrawlCommandArgs extends ConfigArgs {
   stdout?: NodeJS.WritableStream;
 }
 
-class CrawlerSpinnerDecorator {
-  inner: Crawler;
-  stream: NodeJS.WritableStream;
-  constructor(inner: Crawler, stream: NodeJS.WritableStream) {
-    this.inner = inner;
-    this.stream = stream;
-  }
-  setup(): Promise<void> {
-    const promise = this.inner.setup();
-    ora.promise(promise, {
-      stream: this.stream,
-      text: 'Setup'
-    });
-    return promise;
-  }
-  work(concurrency: number): Promise<CrawlReport> {
-    const promise = this.inner.work(concurrency);
-    const spinner = ora.promise(promise, {
-      stream: this.stream,
-      text: 'Calculating...',
-      prefixText: 'Crawling'
-    });
-
-    let done = 0;
-    const tick = (): void => {
-      spinner.text = `Crawled ${++done} of ${this.inner.queue.length}`;
-    };
-    this.inner.on('response.success', tick);
-    this.inner.on('response.error', tick);
-    return promise;
-  }
-  analyze(data: CrawlReport): Promise<Analysis> {
-    const promise = this.inner.analyze(data);
-    ora.promise(promise, {
-      stream: this.stream,
-      text: 'Analyze'
-    });
-    return promise;
-  }
-}
-
 export const command = 'crawl [crawlerfile]';
-export const describe = 'execute the crawl defined in the active config file';
+export const describe =
+  'crawls a defined set of URLs and runs tests against the received responses.';
 export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = yargs => {
   yargs.option('concurrency', {
     alias: 'c',
@@ -91,26 +53,42 @@ export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = yargs => {
   });
 };
 export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
-  const { crawler, json = '', junit = '', concurrency = 3 } = argv;
+  const { crawler, tests, json = '', junit = '', concurrency = 3 } = argv;
   const stdout = argv.stdout ?? process.stdout;
-  const spunCrawler = new CrawlerSpinnerDecorator(crawler, stdout);
+  const spinner = ora({
+    stream: stdout,
+    prefixText: 'Crawling'
+  }).start('Starting');
 
-  await spunCrawler.setup();
+  const eachResults: EachResultMap = new Map();
+  const allUnits = [];
 
-  const data = await spunCrawler.work(concurrency);
+  for await (const unit of crawler.crawl(concurrency)) {
+    eachResults.set(unit.request.url, tests.testUnit(unit));
+    allUnits.push(unit);
+    spinner.text = `Crawled ${allUnits.length}`;
+  }
+  const allResults = tests.testUnits(allUnits);
+  spinner.succeed('Finished Crawling');
 
-  const analysis = await spunCrawler.analyze(data);
-  stdout.write(formatConsole(analysis, { color: true, minLevel: 1 }) + EOL);
+  stdout.write(formatConsole(eachResults, allResults) + EOL);
 
   if (json.length) {
-    fs.writeFileSync(json, JSON.stringify(data), 'utf8');
+    await writeFileP(
+      json,
+      JSON.stringify({ each: eachResults, all: allResults }),
+      'utf8'
+    );
   }
 
   if (junit.length) {
-    fs.writeFileSync(junit, formatJUnit(analysis), 'utf8');
+    await writeFileP(junit, formatJUnit(eachResults, allResults), 'utf8');
   }
 
-  if (analysis.hasFailures()) {
-    throw new FailedAnalysisError('Analysis reported an error');
+  if (
+    hasFailure(allResults) ||
+    Array.from(eachResults.values()).some(hasFailure)
+  ) {
+    throw new FailedAnalysisError('Testing reported an error.');
   }
 };

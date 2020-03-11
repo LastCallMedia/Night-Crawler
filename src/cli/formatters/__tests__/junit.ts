@@ -1,20 +1,23 @@
 import formatJUnit from '../junit';
-import Analysis from '../../../analysis';
-import Number from '../../../metrics/Number';
+import { TestResultMap, TestResult } from '../../../testing/TestContext';
+
+function r(obj: { [k: string]: TestResult }): TestResultMap {
+  return new Map(Object.entries(obj));
+}
 
 describe('JUnit formatter', function() {
-  it('Should output a listing of results', function() {
-    const a = new Analysis('test', new Date());
-    a.addResult('OK', 0, 10, 'm1');
-    a.addResult('WARN', 1, 10, 'm1');
-    a.addResult('ERR', 2, 10, 'm1');
-    expect(formatJUnit(a)).toMatchSnapshot();
+  const each = new Map(
+    Object.entries({
+      ok: r({ ok: { pass: true } }),
+      err: r({ err: { pass: false, message: 'something failed' } })
+    })
+  );
+  const all = r({
+    time: { pass: true },
+    errors: { pass: false, message: 'something failed' }
   });
-  it('Should output aggregates, marked by level', function() {
-    const a = new Analysis('test', new Date());
-    a.addMetric('ok', new Number('OK metric', 0, 0));
-    a.addMetric('warn', new Number('WARN metric', 1, 2));
-    a.addMetric('err', new Number('ERR metric', 2, 5));
-    expect(formatJUnit(a)).toMatchSnapshot();
+
+  it('Should output a listing of results', function() {
+    expect(formatJUnit(each, all)).toMatchSnapshot();
   });
 });
