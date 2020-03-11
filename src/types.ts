@@ -1,22 +1,26 @@
 export type CrawlerRequest = {
   url: string;
   driverOptions?: unknown;
-  groups?: string[]
-  [key: string]: unknown;
-};
-
-export type CrawlerResponse = {
-  url: string;
-  groups?: []
-  error?: Error;
+  groups?: string[];
   [key: string]: unknown;
 };
 
 export type DriverResponse = {
   statusCode: number;
+  time: number;
+  [key: string]: unknown;
+};
+export type CrawlerResponse = DriverResponse;
+
+export type CrawlerUnit = {
+  error?: string | Error;
+  request: CrawlerRequest;
+  response?: CrawlerResponse;
 };
 
-export interface Driver<ResponseType extends DriverResponse = DriverResponse> {
+export interface Driver<
+  ResponseType extends CrawlerResponse = CrawlerResponse
+> {
   /**
    * Fetch a single URL.
    *
@@ -24,12 +28,4 @@ export interface Driver<ResponseType extends DriverResponse = DriverResponse> {
    * where the response is a complete error.
    */
   fetch(req: CrawlerRequest): Promise<ResponseType>;
-
-  /**
-   * Collect data about a response.
-   *
-   * A driver may provide default data about the response, which is merged
-   * into the collected data the crawler itself gathers.
-   */
-  collect(response: ResponseType): Record<string, unknown>;
 }

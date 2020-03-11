@@ -1,37 +1,37 @@
-import { CrawlerResponse } from '../types';
+import { CrawlerUnit } from '../types';
 
-function responseInGroup(response: CrawlerResponse, group: string): boolean {
-  return response.group === group;
+function unitInGroup(unit: CrawlerUnit, group: string): boolean {
+  return !!unit.request.groups?.includes(group);
 }
 
 function filterOneByGroup(
   group: string,
-  cb: (response: CrawlerResponse) => unknown
-): (response: CrawlerResponse) => unknown {
-  return (response: CrawlerResponse): void => {
-    if (responseInGroup(response, group)) {
-      cb(response);
+  cb: OneHandler['cb']
+): OneHandler['cb'] {
+  return (unit): void => {
+    if (unitInGroup(unit, group)) {
+      cb(unit);
     }
   };
 }
 function filterManyByGroup(
   group: string,
-  cb: (responses: CrawlerResponse[]) => void
-): (responses: CrawlerResponse[]) => void {
-  return (responses: CrawlerResponse[]): void => {
-    const matching = responses.filter(response =>
-      responseInGroup(response, group)
-    );
-    cb(matching);
+  cb: ManyHandler['cb']
+): ManyHandler['cb'] {
+  return (units): void => {
+    const matching = units.filter(unit => unitInGroup(unit, group));
+    if (matching.length) {
+      cb(matching);
+    }
   };
 }
 interface OneHandler {
   description: string;
-  cb: (req: CrawlerResponse) => void;
+  cb: (unit: CrawlerUnit) => void;
 }
 interface ManyHandler {
   description: string;
-  cb: (reqs: CrawlerResponse[]) => void;
+  cb: (units: CrawlerUnit[]) => void;
 }
 
 export type TestResult = Map<string, boolean>;
@@ -46,40 +46,32 @@ export default class TestContext {
     this.manyHandlers = [];
   }
 
-  each(description: string, cb: (req: CrawlerResponse) => void): this {
+  each(description: OneHandler['description'], cb: OneHandler['cb']): this {
     this.oneHandlers.push({ description, cb });
     return this;
   }
-  all(description: string, cb: (reqs: CrawlerResponse[]) => void): this {
+  all(description: ManyHandler['description'], cb: ManyHandler['cb']): this {
     this.manyHandlers.push({ description, cb });
     return this;
   }
   eachInGroup(
-    description: string,
+    description: OneHandler['description'],
     group: string,
-    cb: (req: CrawlerResponse) => void
+    cb: OneHandler['cb']
   ): this {
-    this.oneHandlers.push({
-      description,
-      cb: filterOneByGroup(group, cb)
-    });
-    return this;
+    return this.each(description, filterOneByGroup(group, cb));
   }
   allInGroup(
-    description: string,
+    description: ManyHandler['description'],
     group: string,
-    cb: (reqs: CrawlerResponse[]) => void
+    cb: ManyHandler['cb']
   ): this {
-    this.manyHandlers.push({
-      description,
-      cb: filterManyByGroup(group, cb)
-    });
-    return this;
+    return this.all(description, filterManyByGroup(group, cb));
   }
-  testResponse(response: CrawlerResponse): TestResult {
+  testUnit(unit: CrawlerUnit): TestResult {
     return this.oneHandlers.reduce((results, handler) => {
       try {
-        handler.cb(response);
+        handler.cb(unit);
         results.set(handler.description, true);
       } catch (e) {
         results.set(handler.description, false);
@@ -87,10 +79,10 @@ export default class TestContext {
       return results;
     }, new Map<string, boolean>());
   }
-  testResponses(responses: CrawlerResponse[]): TestResult {
+  testUnits(units: CrawlerUnit[]): TestResult {
     return this.manyHandlers.reduce((results, handler) => {
       try {
-        handler.cb(responses);
+        handler.cb(units);
         results.set(handler.description, true);
       } catch (e) {
         results.set(handler.description, false);

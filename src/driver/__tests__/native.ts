@@ -43,17 +43,16 @@ describe('Native Driver', function() {
       });
   });
 
-  it('Should copy status code and time to the collected data', function() {
+  it('Should reply with the time the request took.', function() {
     nock('http://www.example.com')
       .get('/')
       .reply(200);
 
-    const d = new NativeDriver();
-    return d.fetch({ url: 'http://www.example.com' }).then(function(res) {
-      const collected = d.collect(res);
-      expect(typeof collected.statusCode).toEqual('number');
-      expect(typeof collected.time).toEqual('number');
-    });
+    return new NativeDriver()
+      .fetch({ url: 'http://www.example.com' })
+      .then(function(res) {
+        expect(res.time).toBeGreaterThan(0);
+      });
   });
 
   it('Should throw an error in the event of a network issue', function() {

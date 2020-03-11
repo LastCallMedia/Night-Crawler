@@ -52,45 +52,10 @@ describe('Crawler', () => {
     const c = new Crawler(requests, new DummyDriver());
     const crawl = await all(c.crawl(2));
     expect(crawl).toHaveLength(4);
-    expect(crawl[0].created).toBeLessThan(start + 10);
-    expect(crawl[1].created).toBeLessThan(start + 10);
-    expect(crawl[2].created).toBeGreaterThan(start + 200);
-    expect(crawl[3].created).toBeGreaterThan(start + 200);
-  });
-
-  it('Should invoke the success event when requests are successful', async () => {
-    const listener = jest.fn(e => {
-      e.data.added = true;
-    });
-    const request = { url: 'foo' };
-    const c = new Crawler([request], new DummyDriver());
-    c.on('response', listener);
-    await all(c.crawl());
-    expect(listener).toHaveBeenCalled();
-    expect(listener).toHaveBeenCalledWith({
-      request: request,
-      response: { statusCode: 200 },
-      data: {
-        ...request,
-        added: true,
-        error: false,
-        driverCollected: true
-      }
-    });
-  });
-
-  it('Should invoke the error event when requests error out', async () => {
-    const listener = jest.fn();
-    const request = { url: 'foo', shouldFail: true };
-    const c = new Crawler([request], new DummyDriver());
-    c.on('error', listener);
-    await all(c.crawl());
-    expect(listener).toHaveBeenCalled();
-    expect(listener).toHaveBeenCalledWith({
-      request: request,
-      error: true,
-      data: { ...request, error: true }
-    });
+    expect(crawl[0].request.created).toBeLessThan(start + 10);
+    expect(crawl[1].request.created).toBeLessThan(start + 10);
+    expect(crawl[2].request.created).toBeGreaterThan(start + 200);
+    expect(crawl[3].request.created).toBeGreaterThan(start + 200);
   });
 
   it('Should return errors via the generator', async () => {
@@ -99,50 +64,9 @@ describe('Crawler', () => {
     const result = await all(c.crawl());
     expect(result).toEqual([
       {
-        ...request,
+        request,
         error: 'foo'
       }
     ]);
-  });
-
-  it('Should not trigger the error event if an error is thrown during processing of response event', async function() {
-    const error = jest.fn();
-    const response = jest.fn(() => {
-      throw new Error('Test');
-    });
-    const request = { url: 'foo' };
-    const c = new Crawler([request], new DummyDriver());
-    c.on('error', error);
-    c.on('response', response);
-    await expect(all(c.crawl())).resolves.toEqual([
-      {
-        ...request,
-        error: new Error(
-          'An error was caught during processing of a successful result: Error: Test'
-        )
-      }
-    ]);
-    expect(error).not.toHaveBeenCalled();
-  });
-
-  it('Should bubble up errors thrown during processing of error event', async function() {
-    const error = jest.fn(() => {
-      throw new Error('Rethrown');
-    });
-    const response = jest.fn();
-
-    const request = { url: 'foo', shouldFail: true };
-    const c = new Crawler([request], new DummyDriver());
-    c.on('error', error);
-    c.on('response', response);
-    await expect(all(c.crawl())).resolves.toEqual([
-      {
-        ...request,
-        error: new Error(
-          'An error was caught during processing of a failure result: Error: Rethrown'
-        )
-      }
-    ]);
-    expect(response).not.toHaveBeenCalled();
   });
 });

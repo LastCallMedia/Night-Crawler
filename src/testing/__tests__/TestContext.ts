@@ -1,47 +1,59 @@
 import TestContext from '../TestContext';
 
 describe('TestContext', function() {
+  const unit = { request: { url: 'foo' } };
+  const units = [
+    { request: { url: 'foo', groups: ['foo'] } },
+    { request: { url: 'bar', groups: ['bar'] } }
+  ];
+
   it('Should invoke "each" handlers', () => {
     const handler = jest.fn();
     const context = new TestContext();
     context.each('Test', handler);
-    context.testResponse({ url: 'foo' });
+    context.testUnit(unit);
     expect(handler).toHaveBeenCalled();
-    expect(handler).toHaveBeenCalledWith({ url: 'foo' });
+    expect(handler).toHaveBeenCalledWith(unit);
   });
 
   it('Should invoke "all" handlers', () => {
     const handler = jest.fn();
     const context = new TestContext();
     context.all('Test', handler);
-    context.testResponses([{ url: 'foo' }]);
+    context.testUnits(units);
     expect(handler).toHaveBeenCalled();
-    expect(handler).toHaveBeenCalledWith([{ url: 'foo' }]);
+    expect(handler).toHaveBeenCalledWith(units);
   });
 
   it('Should invoke "eachInGroup" handlers.', () => {
     const handler = jest.fn();
     const context = new TestContext();
     context.eachInGroup('Test', 'foo', handler);
-    context.testResponse({ url: 'foo', group: 'foo' });
-    context.testResponse({ url: 'foo', group: 'bar' });
+    context.testUnit(units[0]);
+    context.testUnit(units[1]);
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledWith({ url: 'foo', group: 'foo' });
+    expect(handler).toHaveBeenCalledWith(units[0]);
   });
 
   it('Should invoke "allInGroup" handlers.', () => {
     const handler = jest.fn();
     const context = new TestContext();
     context.allInGroup('Test', 'foo', handler);
-    context.testResponses([
-      { url: 'foo', group: 'foo' },
-      { url: 'baz', group: 'baz' }
-    ]);
+    context.testUnits(units);
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledWith([{ url: 'foo', group: 'foo' }]);
+    expect(handler).toHaveBeenCalledWith([units[0]]);
+  });
+
+  it('Should not invoke "allInGroup" handlers when there are no matching requests', () => {
+    const handler = jest.fn();
+    const context = new TestContext();
+    context.allInGroup('Test', 'baz', handler);
+    context.testUnits(units);
+    expect(handler).not.toHaveBeenCalled();
   });
 
   it('Should collect results for "each" handlers', function() {
+    const unit = { request: { url: 'foo' } };
     const context = new TestContext();
     context.each('pass', () => {
       /* no-op */
@@ -49,7 +61,7 @@ describe('TestContext', function() {
     context.each('fail', () => {
       throw new Error('');
     });
-    const result = context.testResponse({ url: 'foo', group: 'foo' });
+    const result = context.testUnit(unit);
     expect(result).toEqual(
       new Map(
         Object.entries({
@@ -68,10 +80,7 @@ describe('TestContext', function() {
       throw new Error('Test');
     });
 
-    const result = context.testResponses([
-      { url: 'foo', group: 'foo' },
-      { url: 'bar', group: 'bar' }
-    ]);
+    const result = context.testUnits(units);
     expect(result).toEqual(
       new Map(
         Object.entries({

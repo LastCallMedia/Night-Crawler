@@ -10,15 +10,13 @@ import yargs from 'yargs';
 
 import * as crawlModule from '../crawl';
 import TestContext from '../../../testing/TestContext';
-import { CrawlerResponse } from '../../../types';
+import { CrawlerRequest } from '../../../types';
 
 jest.mock('../../formatters/junit', () => {
   return jest.fn(() => 'THIS IS A JUNIT REPORT');
 });
 jest.mock('../../formatters/console', () => {
-  return jest.fn((a, b, opts) => {
-    return `CONSOLE_ANALYSIS:${opts.color ? 'color' : 'nocolor'}`;
-  });
+  return jest.fn(() => 'CONSOLE_ANALYSIS');
 });
 
 const mockedJUnit = (formatJUnit as unknown) as jest.Mock<typeof formatJUnit>;
@@ -106,7 +104,7 @@ describe('Crawl Handler', function() {
     const crawler = new Crawler([], new DummyDriver());
     const tests = new TestContext();
     await handler({ stdout, crawler, tests });
-    expect(stdout.read().toString()).toContain('CONSOLE_ANALYSIS:color');
+    expect(stdout.read().toString()).toContain('CONSOLE_ANALYSIS');
   });
 
   it('Throws an error if the analysis contains failures', async function() {
@@ -126,7 +124,7 @@ describe('Crawl Handler', function() {
   it('Should stop the crawl if setup fails', async function() {
     const crawler = new Crawler(
       // eslint-disable-next-line require-yield
-      (async function*(): AsyncIterable<CrawlerResponse> {
+      (async function*(): AsyncIterable<CrawlerRequest> {
         throw new Error('Oh no!');
       })(),
       new DummyDriver()

@@ -4,8 +4,9 @@ import http from 'http';
 import { URL } from 'url';
 import { performance } from 'perf_hooks';
 
-type NativeDriverResponse = http.IncomingMessage & {
+type NativeDriverResponse = {
   statusCode: number;
+  statusMessage?: string;
   time: number;
 };
 
@@ -31,12 +32,11 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
       );
       const start = performance.now();
       const req = this._getDriver(parsed).request(theseOptions, res => {
-        resolve(
-          Object.assign(res, {
-            statusCode: res.statusCode ?? 0,
-            time: performance.now() - start
-          })
-        );
+        resolve({
+          statusCode: res.statusCode ?? 0,
+          statusMessage: res.statusMessage,
+          time: performance.now() - start
+        });
       });
       req.on('timeout', () => {
         req.abort();
@@ -44,16 +44,6 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
       req.on('error', reject);
       req.end();
     });
-  }
-
-  collect(
-    response: NativeDriverResponse
-  ): { statusCode?: number; statusMessage?: string; time: number } {
-    return {
-      statusCode: response.statusCode,
-      statusMessage: response.statusMessage,
-      time: response.time
-    };
   }
 
   private _getDriver(url: URL): typeof http | typeof https {

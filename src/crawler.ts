@@ -1,43 +1,20 @@
-import Emittery from 'emittery';
 import debug from 'debug';
 import NativeDriver from './driver/native';
 
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
 
-import {
-  Driver,
-  DriverResponse,
-  CrawlerRequest,
-  CrawlerResponse
-} from './types';
-
-export type ResponseEvent = {
-  request: CrawlerRequest;
-  response: DriverResponse;
-  data: CrawlerResponse;
-};
-export type ErrorEvent = {
-  request: CrawlerRequest;
-  error: Error;
-  data: CrawlerResponse;
-};
-type EmitteryEvents = {
-  setup: Crawler;
-  response: ResponseEvent;
-  error: ErrorEvent;
-};
+import { Driver, CrawlerRequest, CrawlerUnit } from './types';
 
 type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
   | Iterable<T>
   | AsyncIterable<T>;
 
-export default class Crawler extends Emittery.Typed<EmitteryEvents> {
+export default class Crawler {
   driver: Driver;
   iterator: RequestIterable;
 
   constructor(requests: RequestIterable, driver: Driver = new NativeDriver()) {
-    super();
     this.iterator = requests;
     this.driver = driver;
   }
@@ -49,11 +26,11 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    *
    * @returns {Promise.<Bluebird.<U[]>>}
    */
-  async *crawl(concurrency = 3): AsyncGenerator<CrawlerResponse> {
+  async *crawl(concurrency = 3): AsyncGenerator<CrawlerUnit> {
     const pool = new Set<Promise<unknown>>();
-    const buffer: CrawlerResponse[] = [];
-    const collectToBuffer = (res: CrawlerResponse): void => {
-      buffer.push(res);
+    const buffer: CrawlerUnit[] = [];
+    const collectToBuffer = (unit: CrawlerUnit): void => {
+      buffer.push(unit);
     };
 
     for await (const crawlerRequest of this.iterator) {
@@ -72,7 +49,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
       }
       // Yield all of the buffer results that have accumulated.
       while (buffer.length > 0) {
-        yield buffer.pop() as CrawlerResponse;
+        yield buffer.pop() as CrawlerUnit;
       }
     }
     // Finish processing the rest of the queue, yielding results as they are ready.
@@ -80,7 +57,7 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
       await Promise.race(pool);
       // Yield all of the buffer results that have accumulated.
       while (buffer.length > 0) {
-        yield buffer.pop() as CrawlerResponse;
+        yield buffer.pop() as CrawlerUnit;
       }
     }
   }
@@ -91,82 +68,21 @@ export default class Crawler extends Emittery.Typed<EmitteryEvents> {
    * @param req
    * @returns {Promise.<T>}
    */
-  async _fetch(req: CrawlerRequest): Promise<CrawlerResponse> {
+  async _fetch(req: CrawlerRequest): Promise<CrawlerUnit> {
     log(`Fetching ${req.url}`);
-    let res;
 
     try {
-      res = await this.driver.fetch(req);
-    } catch (err) {
-      try {
-        return await this._collectError(req, err);
-      } catch (err) {
-        return {
-          ...req,
-          error: new Error(
-            `An error was caught during processing of a failure result: ${err}`
-          )
-        };
-      }
-    }
-
-    try {
-      return await this._collectSuccess(req, res);
-    } catch (err) {
+      const res = await this.driver.fetch(req);
       return {
-        ...req,
-        error: new Error(
-          `An error was caught during processing of a successful result: ${err}`
-        )
+        request: req,
+        response: res
+      };
+    } catch (err) {
+      error(`Received error fetching ${req.url}`);
+      return {
+        error: err,
+        request: req
       };
     }
-  }
-
-  /**
-   * Collect a report about a successful response.
-   *
-   * @param crawlerRequest
-   * @param response
-   * @returns {Promise.<*>}
-   */
-  async _collectSuccess(
-    crawlerRequest: CrawlerRequest,
-    response: DriverResponse
-  ): Promise<CrawlerResponse> {
-    log(`Success on ${crawlerRequest.url}`);
-
-    const data = Object.assign(
-      {},
-      crawlerRequest,
-      { error: false },
-      this.driver.collect(response)
-    );
-    await this.emit('response', {
-      request: crawlerRequest,
-      response,
-      data
-    });
-    return data;
-  }
-
-  /**
-   * Collect a report about an error response.
-   *
-   * @param crawlerRequest
-   * @param err
-   * @returns {Promise.<*>}
-   */
-  async _collectError(
-    crawlerRequest: CrawlerRequest,
-    err: Error
-  ): Promise<CrawlerResponse> {
-    error(`Error on ${crawlerRequest.url}: ${err.toString()}`);
-    const data = Object.assign({}, crawlerRequest, { error: err });
-    await this.emit('error', {
-      error: err,
-      request: crawlerRequest,
-      data
-    });
-    return data;
   }
 }
