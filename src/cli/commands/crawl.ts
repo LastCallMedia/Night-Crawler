@@ -1,14 +1,11 @@
-import { writeFile } from 'fs';
-import { promisify } from 'util';
 import { FailedAnalysisError } from '../errors';
-import format from '../formatters/console';
-import formatJUnit from '../formatters/junit';
+import ConsoleReporter from '../formatters/ConsoleReporter';
+import JUnitReporter from '../formatters/JUnitReporter';
+import JSONReporter from '../formatters/JSONReporter';
 import { BuilderCallback } from 'yargs';
 import { ConfigArgs } from '../index';
-import { EachResultMap } from '../../testing/TestContext';
 import { hasFailure } from '../util';
-
-const writeFileP = promisify(writeFile);
+import Reporter from '../formatters/Reporter';
 
 export interface CrawlCommandArgs extends ConfigArgs {
   concurrency?: number;
@@ -50,39 +47,45 @@ export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = yargs => {
     default: ''
   });
 };
-export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
-  const { crawler, tests, json = '', junit = '', concurrency = 3 } = argv;
-  const stdout = argv.stdout ?? process.stdout;
 
-  const eachResults: EachResultMap = new Map();
+function getReporters(argv: CrawlCommandArgs): Reporter[] {
+  const reporters = [];
+  if (!argv.silent) {
+    reporters.push(new ConsoleReporter(argv.stdout ?? process.stdout));
+  }
+  if (argv.junit?.length) {
+    reporters.push(new JUnitReporter(argv.junit));
+  }
+  if (argv.json?.length) {
+    reporters.push(new JSONReporter(argv.json));
+  }
+  return reporters;
+}
+export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
+  const { crawler, tests, concurrency = 3 } = argv;
+
+  const reporters: Reporter[] = getReporters(argv);
+  await Promise.all(reporters.map(reporter => reporter.start()));
+
+  let hasError = false;
   const allUnits = [];
   for await (const unit of crawler.crawl(concurrency)) {
     const result = tests.testUnit(unit);
-    stdout.write(format(unit.request.url, result, { columns: stdout.columns }));
-
-    eachResults.set(unit.request.url, result);
+    reporters.forEach(r => r.report(unit.request.url, result));
+    hasError = hasError || hasFailure(result);
     allUnits.push(unit);
   }
   const allResults = tests.testUnits(allUnits);
+  await Promise.all(
+    reporters.map(reporter => {
+      if (allResults.size > 0) {
+        reporter.report('All Requests', allResults);
+      }
+      return reporter.stop();
+    })
+  );
 
-  stdout.write(format('All Requests', allResults, { columns: stdout.columns }));
-
-  if (json.length) {
-    await writeFileP(
-      json,
-      JSON.stringify({ each: eachResults, all: allResults }),
-      'utf8'
-    );
-  }
-
-  if (junit.length) {
-    await writeFileP(junit, formatJUnit(eachResults, allResults), 'utf8');
-  }
-
-  if (
-    hasFailure(allResults) ||
-    Array.from(eachResults.values()).some(hasFailure)
-  ) {
+  if (hasFailure(allResults) || hasError) {
     throw new FailedAnalysisError('Testing reported an error.');
   }
 };
