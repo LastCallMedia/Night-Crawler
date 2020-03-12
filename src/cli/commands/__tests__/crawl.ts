@@ -1,25 +1,27 @@
 import { CrawlCommandArgs, handler } from '../crawl';
 import stream from 'stream';
-import os from 'os';
-import fs from 'fs';
 import Crawler from '../../../crawler';
 import DummyDriver from '../../../driver/dummy';
 import { FailedAnalysisError } from '../../errors';
-import formatJUnit from '../../formatters/junit';
 import yargs from 'yargs';
 
 import * as crawlModule from '../crawl';
 import TestContext from '../../../testing/TestContext';
 import { CrawlerRequest } from '../../../types';
 
-jest.mock('../../formatters/junit', () => {
-  return jest.fn(() => 'THIS IS A JUNIT REPORT');
-});
-jest.mock('../../formatters/console', () => {
-  return jest.fn(() => 'CONSOLE_ANALYSIS');
-});
+import ConsoleReporter from '../../formatters/ConsoleReporter';
+import JUnitReporter from '../../formatters/JUnitReporter';
+import JSONReporter from '../../formatters/JSONReporter';
 
-const mockedJUnit = (formatJUnit as unknown) as jest.Mock<typeof formatJUnit>;
+import { mocked } from 'ts-jest';
+
+jest.mock('../../formatters/JUnitReporter');
+jest.mock('../../formatters/ConsoleReporter');
+jest.mock('../../formatters/JSONReporter');
+
+const MockedConsoleReporter = mocked(ConsoleReporter);
+const MockedJUnitReporter = mocked(JUnitReporter);
+const MockedJSONReporter = mocked(JSONReporter);
 
 function runWithHandler(
   argv: string,
@@ -87,6 +89,9 @@ describe('Crawl Handler', function() {
 
   beforeEach(function() {
     stdout = new MockTTY();
+    MockedConsoleReporter.mockReset();
+    MockedJUnitReporter.mockReset();
+    MockedJSONReporter.mockReset();
   });
 
   it('Executes the crawl', async function() {
@@ -99,21 +104,76 @@ describe('Crawl Handler', function() {
     expect(crawl).toHaveBeenCalledWith(1);
   });
 
-  it('Displays output to indicate the status of the crawl', async function() {
+  it('Displays console output.', async function() {
     const crawler = new Crawler(
       [{ url: 'http://example.com' }],
       new DummyDriver()
     );
-    await handler({ stdout, crawler, tests: new TestContext() });
-    const output = stdout.read().toString();
-    expect(output).toMatchSnapshot();
+    const tests = new TestContext();
+    tests.each('Testing', () => {
+      throw new Error('Test');
+    });
+    tests.all('Testing', () => {
+      throw new Error('Test');
+    });
+    try {
+      await handler({ stdout, crawler, tests });
+    } catch (e) {
+      // no-op - we don't care.
+    }
+    expect(MockedConsoleReporter).toHaveBeenCalled();
+    const reporter = MockedConsoleReporter.mock.instances[0];
+    expect(reporter.start).toHaveBeenCalledTimes(1);
+    expect(reporter.report).toHaveBeenCalledTimes(2);
+    expect(reporter.stop).toHaveBeenCalledTimes(1);
   });
 
-  it('Outputs analysis at the end of the crawl if the output is not silent', async function() {
-    const crawler = new Crawler([], new DummyDriver());
+  it('Writes a JUnit report', async function() {
+    const crawler = new Crawler(
+      [{ url: 'http://example.com' }],
+      new DummyDriver()
+    );
     const tests = new TestContext();
-    await handler({ stdout, crawler, tests });
-    expect(stdout.read().toString()).toContain('CONSOLE_ANALYSIS');
+    tests.each('Testing', () => {
+      throw new Error('Test');
+    });
+    tests.all('Testing', () => {
+      throw new Error('Test');
+    });
+    try {
+      await handler({ stdout, crawler, tests, junit: 'test' });
+    } catch (e) {
+      // no-op - we don't care.
+    }
+    expect(MockedJUnitReporter).toHaveBeenCalled();
+    const reporter = MockedJUnitReporter.mock.instances[0];
+    expect(reporter.start).toHaveBeenCalledTimes(1);
+    expect(reporter.report).toHaveBeenCalledTimes(2);
+    expect(reporter.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('Writes a JSON report', async function() {
+    const crawler = new Crawler(
+      [{ url: 'http://example.com' }],
+      new DummyDriver()
+    );
+    const tests = new TestContext();
+    tests.each('Testing', () => {
+      throw new Error('Test');
+    });
+    tests.all('Testing', () => {
+      throw new Error('Test');
+    });
+    try {
+      await handler({ stdout, crawler, tests, json: 'test' });
+    } catch (e) {
+      // no-op - we don't care.
+    }
+    expect(MockedJSONReporter).toHaveBeenCalled();
+    const reporter = MockedJSONReporter.mock.instances[0];
+    expect(reporter.start).toHaveBeenCalledTimes(1);
+    expect(reporter.report).toHaveBeenCalledTimes(2);
+    expect(reporter.stop).toHaveBeenCalledTimes(1);
   });
 
   it('Throws an error if the analysis contains failures', async function() {
@@ -144,39 +204,5 @@ describe('Crawl Handler', function() {
       tests: new TestContext()
     });
     return expect(p).rejects.toThrow('Oh no!');
-  });
-
-  it('Should save a junit report if requested', async function() {
-    const filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
-      Math.random() * 10000
-    )}`;
-    const crawler = new Crawler([], new DummyDriver());
-
-    await handler({
-      junit: filename,
-      stdout,
-      crawler,
-      tests: new TestContext()
-    });
-    expect(mockedJUnit).toHaveBeenCalledWith(new Map(), new Map());
-    await expect(
-      fs.promises.readFile(filename, { encoding: 'utf-8' })
-    ).resolves.toEqual('THIS IS A JUNIT REPORT');
-    await fs.promises.unlink(filename);
-  });
-
-  it('Should save a valid JSON run report if requested', async function() {
-    const filename = `${os.tmpdir()}/nightcrawler-${Math.floor(
-      Math.random() * 10000
-    )}`;
-    const crawler = new Crawler([], new DummyDriver());
-    await handler({
-      json: filename,
-      stdout,
-      crawler,
-      tests: new TestContext()
-    });
-    await expect(fs.promises.stat(filename)).resolves.toBeTruthy();
-    await fs.promises.unlink(filename);
   });
 });

@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`JUnit Reporter Should write a junit file containing results 1`] = `
+"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
+<testsuites>
+  <testsuite name=\\"passing\\" tests=\\"1\\" failures=\\"0\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
+    <testcase classname=\\"pass\\" time=\\"0\\"/>
+  </testsuite>
+  <testsuite name=\\"failing\\" tests=\\"1\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
+    <testcase classname=\\"fail\\" time=\\"0\\">
+      <failure/>
+      <system-out><![CDATA[There was an error.]]></system-out>
+    </testcase>
+  </testsuite>
+  <testsuite name=\\"mixed\\" tests=\\"2\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0\\">
+    <testcase classname=\\"pass\\" time=\\"0\\"/>
+    <testcase classname=\\"fail\\" time=\\"0\\">
+      <failure/>
+      <system-out><![CDATA[there was an error.]]></system-out>
+    </testcase>
+  </testsuite>
+</testsuites>"
+`;

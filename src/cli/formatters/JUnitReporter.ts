@@ -1,5 +1,10 @@
 import xml from 'xml';
-import { TestResultMap, EachResultMap } from '../../testing/TestContext';
+import { TestResultMap } from '../../testing/TestContext';
+import Reporter from './Reporter';
+import { writeFile } from 'fs';
+import { promisify } from 'util';
+
+const writeFileP = promisify(writeFile);
 
 type XMLAttributeObj = { [k: string]: number | string };
 type XMLElement = { [k: string]: number | string | XMLElement | XMLElement[] };
@@ -101,18 +106,24 @@ function formatResultSet(name: string, results: TestResultMap): XMLElement {
   return suite.toXMLObj();
 }
 
-export default function formatJUnit(
-  eachResults: EachResultMap,
-  allResults: TestResultMap
-): string {
-  const suites = Array.from(eachResults).map(([url, resultSet]) =>
-    formatResultSet(url, resultSet)
-  );
-  suites.push(formatResultSet('AllResults', allResults));
-  return xml(
-    {
-      testsuites: suites
-    },
-    { indent: '  ', declaration: true }
-  );
+export default class JUnitReporter implements Reporter {
+  path: string;
+  suites: XMLElement[];
+  constructor(path: string) {
+    this.path = path;
+    this.suites = [];
+  }
+  async start(): Promise<void> {
+    // no-op
+  }
+  report(url: string, result: TestResultMap): void {
+    this.suites.push(formatResultSet(url, result));
+  }
+  async stop(): Promise<void> {
+    const output = xml(
+      { testsuites: this.suites },
+      { indent: '  ', declaration: true }
+    );
+    return writeFileP(this.path, output);
+  }
 }

@@ -3,11 +3,12 @@ import { hasFailure } from '../util';
 import chalk from 'chalk';
 import wrap from 'wrap-ansi';
 import indent from 'indent-string';
+import Reporter from './Reporter';
 
 type Options = { columns: number };
 const defaults: Options = { columns: 60 };
 
-export default function formatResult(
+function formatResult(
   url: string,
   result: TestResultMap,
   options: Partial<Options> = {}
@@ -30,4 +31,24 @@ export default function formatResult(
     .join('\n');
 
   return `${chalk.bgRed('FAIL')} ${url}\n${detail}\n`;
+}
+
+type StdOut = NodeJS.WritableStream & { columns: number };
+
+export default class ConsoleReporter implements Reporter {
+  stdout: StdOut;
+  constructor(stdout: NodeJS.WritableStream & { columns: number }) {
+    this.stdout = stdout;
+  }
+  async start(): Promise<void> {
+    this.stdout.write('Crawling...\n');
+  }
+  report(url: string, result: TestResultMap): void {
+    this.stdout.write(
+      formatResult(url, result, { columns: this.stdout.columns })
+    );
+  }
+  async stop(): Promise<void> {
+    this.stdout.write('Crawling complete.\n');
+  }
 }

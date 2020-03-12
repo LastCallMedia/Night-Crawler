@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`JSON Reporter Should write a json file containing results 1`] = `
+"[
+    {
+        \\"url\\": \\"passing\\",
+        \\"result\\": {
+            \\"pass\\": {
+                \\"pass\\": true
+            }
+        }
+    },
+    {
+        \\"url\\": \\"failing\\",
+        \\"result\\": {
+            \\"fail\\": {
+                \\"pass\\": false,
+                \\"message\\": \\"There was an error.\\"
+            }
+        }
+    },
+    {
+        \\"url\\": \\"mixed\\",
+        \\"result\\": {
+            \\"pass\\": {
+                \\"pass\\": true
+            },
+            \\"fail\\": {
+                \\"pass\\": false,
+                \\"message\\": \\"there was an error.\\"
+            }
+        }
+    }
+]"
+`;
