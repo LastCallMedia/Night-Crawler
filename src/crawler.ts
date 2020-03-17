@@ -7,7 +7,7 @@ const error = debug('nightcrawler:error');
 
 import { Driver, CrawlerRequest, CrawlerUnit } from './types';
 
-type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
+export type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
   | Iterable<T>
   | AsyncIterable<T>;
 

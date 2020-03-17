@@ -1,20 +1,16 @@
 import { file } from 'tmp-promise';
 import { promises as fs } from 'fs';
-import { TestResultMap, TestResult } from '../../../testing/TestContext';
 import JSONReporter from '../JSONReporter';
-
-function r(obj: { [k: string]: TestResult }): TestResultMap {
-  return new Map(Object.entries(obj));
-}
+import { makeResult } from '../../util';
 
 describe('JSON Reporter', function() {
-  const pass = r({
+  const pass = makeResult({
     pass: { pass: true }
   });
-  const fail = r({
+  const fail = makeResult({
     fail: { pass: false, message: 'There was an error.' }
   });
-  const mix = r({
+  const mix = makeResult({
     pass: { pass: true },
     fail: { pass: false, message: 'there was an error.' }
   });
