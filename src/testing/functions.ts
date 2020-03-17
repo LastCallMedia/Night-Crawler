@@ -1,6 +1,6 @@
 import TestContext from './TestContext';
 import Crawler from '../Crawler';
-import type {RequestIterable} from "../types";
+import { RequestIterable } from '../types';
 
 let activeContext: TestContext | null = null;
 
