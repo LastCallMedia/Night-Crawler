@@ -1,20 +1,19 @@
 import { CrawlCommandArgs, handler } from '../crawl';
 import stream from 'stream';
-import Crawler from '../../../crawler';
-import DummyDriver from '../../../driver/dummy';
 import { FailedAnalysisError } from '../../errors';
 import yargs from 'yargs';
 
 import * as crawlModule from '../crawl';
 import TestContext from '../../../testing/TestContext';
-import { CrawlerRequest } from '../../../types';
 
 import ConsoleReporter from '../../formatters/ConsoleReporter';
 import JUnitReporter from '../../formatters/JUnitReporter';
 import JSONReporter from '../../formatters/JSONReporter';
 
-import { mocked } from 'ts-jest';
+import { mocked } from 'ts-jest/utils';
+import { makeResult } from '../../util';
 
+jest.mock('../../../testing/TestContext');
 jest.mock('../../formatters/JUnitReporter');
 jest.mock('../../formatters/ConsoleReporter');
 jest.mock('../../formatters/JSONReporter');
@@ -96,112 +95,114 @@ describe('Crawl Handler', function() {
 
   it('Executes the crawl', async function() {
     // eslint-disable-next-line
-    const crawl = jest.fn(async function*() {});
-    const crawler = new Crawler([]);
-    const tests = new TestContext();
-    crawler.crawl = crawl;
-    await handler({ stdout, crawler, tests, concurrency: 1 });
-    expect(crawl).toHaveBeenCalledWith(1);
+    const context = new TestContext('');
+    context.crawl = jest.fn(async function*(): ReturnType<
+      TestContext['crawl']
+    > {
+      // No-op.
+    });
+    const mockedContext = mocked(context);
+    await handler({ stdout, context, concurrency: 1 });
+    expect(mockedContext.crawl).toHaveBeenCalledWith(1);
   });
 
   it('Displays console output.', async function() {
-    const crawler = new Crawler(
-      [{ url: 'http://example.com' }],
-      new DummyDriver()
-    );
-    const tests = new TestContext();
-    tests.each('Testing', () => {
-      throw new Error('Test');
-    });
-    tests.all('Testing', () => {
-      throw new Error('Test');
-    });
+    const context = new TestContext('');
+    context.crawl = async function*(): ReturnType<TestContext['crawl']> {
+      yield [
+        'http://example.com',
+        makeResult({ Testing: { pass: false, message: 'Test' } })
+      ];
+    };
     try {
-      await handler({ stdout, crawler, tests });
+      await handler({ stdout, context });
     } catch (e) {
       // no-op - we don't care.
     }
     expect(MockedConsoleReporter).toHaveBeenCalled();
     const reporter = MockedConsoleReporter.mock.instances[0];
     expect(reporter.start).toHaveBeenCalledTimes(1);
-    expect(reporter.report).toHaveBeenCalledTimes(2);
+    expect(reporter.report).toHaveBeenCalledTimes(1);
     expect(reporter.stop).toHaveBeenCalledTimes(1);
   });
 
-  it('Writes a JUnit report', async function() {
-    const crawler = new Crawler(
-      [{ url: 'http://example.com' }],
-      new DummyDriver()
-    );
-    const tests = new TestContext();
-    tests.each('Testing', () => {
-      throw new Error('Test');
-    });
-    tests.all('Testing', () => {
-      throw new Error('Test');
-    });
+  it('Does not display console output if passed --silent', async function() {
+    const context = new TestContext('');
+    context.crawl = async function*(): ReturnType<TestContext['crawl']> {
+      yield [
+        'http://example.com',
+        makeResult({ Testing: { pass: false, message: 'Test' } })
+      ];
+    };
     try {
-      await handler({ stdout, crawler, tests, junit: 'test' });
+      await handler({ stdout, context, silent: true });
     } catch (e) {
       // no-op - we don't care.
     }
-    expect(MockedJUnitReporter).toHaveBeenCalled();
+    expect(MockedConsoleReporter).not.toHaveBeenCalled();
+  });
+
+  it('Writes a JUnit report', async function() {
+    const context = new TestContext('');
+    context.crawl = async function*(): ReturnType<TestContext['crawl']> {
+      yield [
+        'http://example.com',
+        makeResult({ Testing: { pass: false, message: 'Test' } })
+      ];
+    };
+    try {
+      await handler({ stdout, context, junit: 'test.xml' });
+    } catch (e) {
+      // no-op - we don't care.
+    }
+    expect(MockedJUnitReporter).toHaveBeenCalledWith('test.xml');
     const reporter = MockedJUnitReporter.mock.instances[0];
     expect(reporter.start).toHaveBeenCalledTimes(1);
-    expect(reporter.report).toHaveBeenCalledTimes(2);
+    expect(reporter.report).toHaveBeenCalledTimes(1);
     expect(reporter.stop).toHaveBeenCalledTimes(1);
   });
 
   it('Writes a JSON report', async function() {
-    const crawler = new Crawler(
-      [{ url: 'http://example.com' }],
-      new DummyDriver()
-    );
-    const tests = new TestContext();
-    tests.each('Testing', () => {
-      throw new Error('Test');
-    });
-    tests.all('Testing', () => {
-      throw new Error('Test');
-    });
+    const context = new TestContext('');
+    context.crawl = async function*(): ReturnType<TestContext['crawl']> {
+      yield [
+        'http://example.com',
+        makeResult({ Testing: { pass: false, message: 'Test' } })
+      ];
+    };
     try {
-      await handler({ stdout, crawler, tests, json: 'test' });
+      await handler({ stdout, context, json: 'test.json' });
     } catch (e) {
       // no-op - we don't care.
     }
-    expect(MockedJSONReporter).toHaveBeenCalled();
+    expect(MockedJSONReporter).toHaveBeenCalledWith('test.json');
     const reporter = MockedJSONReporter.mock.instances[0];
     expect(reporter.start).toHaveBeenCalledTimes(1);
-    expect(reporter.report).toHaveBeenCalledTimes(2);
+    expect(reporter.report).toHaveBeenCalledTimes(1);
     expect(reporter.stop).toHaveBeenCalledTimes(1);
   });
 
   it('Throws an error if the analysis contains failures', async function() {
-    const crawler = new Crawler(
-      [{ url: 'https://example.com' }],
-      new DummyDriver()
-    );
-    const tests = new TestContext();
-    tests.each('testing', () => {
-      throw new Error('test');
-    });
-    await expect(handler({ stdout, crawler, tests })).rejects.toBeInstanceOf(
+    const context = new TestContext('');
+    context.crawl = async function*(): ReturnType<TestContext['crawl']> {
+      yield [
+        'http://example.com',
+        makeResult({ Testing: { pass: false, message: 'Test' } })
+      ];
+    };
+    await expect(handler({ stdout, context })).rejects.toBeInstanceOf(
       FailedAnalysisError
     );
   });
 
   it('Should stop the crawl if setup fails', async function() {
-    const crawler = new Crawler(
-      // eslint-disable-next-line require-yield
-      (async function*(): AsyncIterable<CrawlerRequest> {
-        throw new Error('Oh no!');
-      })(),
-      new DummyDriver()
-    );
+    const context = new TestContext('');
+    context.crawl = (): ReturnType<TestContext['crawl']> => {
+      throw new Error('Oh no!');
+    };
     const p = handler({
       stdout,
-      crawler,
-      tests: new TestContext()
+      context
     });
     return expect(p).rejects.toThrow('Oh no!');
   });

@@ -62,30 +62,20 @@ function getReporters(argv: CrawlCommandArgs): Reporter[] {
   return reporters;
 }
 export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
-  const { crawler, tests, concurrency = 3 } = argv;
+  const { context, concurrency = 3 } = argv;
+  let hasAnyFailure = false;
 
   const reporters: Reporter[] = getReporters(argv);
   await Promise.all(reporters.map(reporter => reporter.start()));
 
-  let hasError = false;
-  const allUnits = [];
-  for await (const unit of crawler.crawl(concurrency)) {
-    const result = tests.testUnit(unit);
-    reporters.forEach(r => r.report(unit.request.url, result));
-    hasError = hasError || hasFailure(result);
-    allUnits.push(unit);
+  for await (const [url, result] of context.crawl(concurrency)) {
+    reporters.forEach(r => r.report(url, result));
+    hasAnyFailure = hasAnyFailure || hasFailure(result);
   }
-  const allResults = tests.testUnits(allUnits);
-  await Promise.all(
-    reporters.map(reporter => {
-      if (allResults.size > 0) {
-        reporter.report('All Requests', allResults);
-      }
-      return reporter.stop();
-    })
-  );
 
-  if (hasFailure(allResults) || hasError) {
+  await Promise.all(reporters.map(r => r.stop()));
+
+  if (hasAnyFailure) {
     throw new FailedAnalysisError('Testing reported an error.');
   }
 };

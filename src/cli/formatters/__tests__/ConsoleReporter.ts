@@ -1,19 +1,15 @@
-import { TestResultMap, TestResult } from '../../../testing/TestContext';
 import { PassThrough } from 'stream';
 import ConsoleReporter from '../ConsoleReporter';
-
-function r(obj: { [k: string]: TestResult }): TestResultMap {
-  return new Map(Object.entries(obj));
-}
+import { makeResult } from '../../util';
 
 describe('Console Formatter', function() {
-  const pass = r({
+  const pass = makeResult({
     ok: { pass: true }
   });
-  const fail = r({
+  const fail = makeResult({
     notok: { pass: false, message: 'There was an error.' }
   });
-  const mix = r({
+  const mix = makeResult({
     ok: { pass: true },
     notok: { pass: false, message: 'something failed' }
   });
@@ -32,6 +28,22 @@ describe('Console Formatter', function() {
   beforeEach(function() {
     stdout = new MockTTY();
     reporter = new ConsoleReporter(stdout);
+  });
+
+  it('Should output start message', async function() {
+    await reporter.start();
+    expect(stdout.read().toString()).toMatchInlineSnapshot(`
+      "Crawling...
+      "
+    `);
+  });
+
+  it('Should output completion message', async function() {
+    await reporter.stop();
+    expect(stdout.read().toString()).toMatchInlineSnapshot(`
+"Crawling complete.
+"
+`);
   });
 
   it('Should output successful results', function() {

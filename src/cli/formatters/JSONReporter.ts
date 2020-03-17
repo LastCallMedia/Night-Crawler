@@ -2,13 +2,24 @@ import Reporter from './Reporter';
 import { TestResult, TestResultMap } from '../../testing/TestContext';
 import { writeFile } from 'fs';
 import { promisify } from 'util';
+import strip from 'strip-ansi';
 
 const writeFileP = promisify(writeFile);
 
-function mapToObj<T = unknown>(map: Map<string, T>): { [k: string]: T } {
+function stripResult(object: {
+  [k: string]: string | boolean;
+}): { [k: string]: string | boolean } {
+  const ret = Object.create(null);
+  for (const [k, v] of Object.entries(object)) {
+    ret[k] = typeof v === 'string' ? strip(v) : v;
+  }
+  return ret;
+}
+
+function mapToObj(map: Map<string, TestResult>): { [k: string]: TestResult } {
   const obj = Object.create(null);
   for (const [k, v] of map) {
-    obj[k] = v;
+    obj[strip(k)] = stripResult(v);
   }
   return obj;
 }
@@ -24,7 +35,7 @@ export default class JSONReporter implements Reporter {
     // no-op.
   }
   report(url: string, result: TestResultMap): void {
-    this.collected.push({ url, result: mapToObj<TestResult>(result) });
+    this.collected.push({ url, result: mapToObj(result) });
   }
   async stop(): Promise<void> {
     await writeFileP(this.path, JSON.stringify(this.collected, null, 4));

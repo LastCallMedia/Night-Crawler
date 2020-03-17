@@ -3,6 +3,7 @@ import { TestResultMap } from '../../testing/TestContext';
 import Reporter from './Reporter';
 import { writeFile } from 'fs';
 import { promisify } from 'util';
+import strip from 'strip-ansi';
 
 const writeFileP = promisify(writeFile);
 
@@ -99,7 +100,7 @@ function formatResultSet(name: string, results: TestResultMap): XMLElement {
     const thisCase = new TestCase(url);
     if (!result.pass) {
       thisCase.failure = true;
-      thisCase.output = result.message;
+      thisCase.output = strip(result.message);
     }
     suite.addCase(thisCase);
   });

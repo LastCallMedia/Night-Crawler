@@ -1,33 +1,26 @@
 import yargs, { MiddlewareFunction } from 'yargs';
-import Crawler from '../crawler';
 import path from 'path';
 import TestContext from '../testing/TestContext';
 
 interface PreloadCrawlerArgs {
   config: string;
-  crawler?: Crawler;
 }
 export interface ConfigArgs {
   config?: string;
-  crawler: Crawler;
-  tests: TestContext;
-}
-
-function requireConfig(file: string): { crawler: Crawler; tests: TestContext } {
-  const resolved = path.resolve(process.cwd(), file);
-  return require(resolved);
+  context: TestContext;
 }
 
 const loadConfig: MiddlewareFunction<PreloadCrawlerArgs> = argv => {
-  try {
-    const config = requireConfig(argv.config);
-    argv.crawler = config.crawler;
-    argv.tests = config.tests;
-  } catch (e) {
-    throw new Error(
-      `Unable to load crawler from ${argv.config} due to error: ${e.toString()}`
-    );
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const context = require(path.resolve(process.cwd(), argv.config));
+  if (context instanceof TestContext) {
+    return {
+      context
+    };
   }
+  throw new Error(
+    `The configuration file at ${argv.config} does not export a valid test context.`
+  );
 };
 
 yargs
