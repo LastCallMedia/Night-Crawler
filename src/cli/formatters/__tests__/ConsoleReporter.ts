@@ -30,6 +30,22 @@ describe('Console Formatter', function() {
     reporter = new ConsoleReporter(stdout);
   });
 
+  it('Should output start message', async function() {
+    await reporter.start();
+    expect(stdout.read().toString()).toMatchInlineSnapshot(`
+      "Crawling...
+      "
+    `);
+  });
+
+  it('Should output completion message', async function() {
+    await reporter.stop();
+    expect(stdout.read().toString()).toMatchInlineSnapshot(`
+"Crawling complete.
+"
+`);
+  });
+
   it('Should output successful results', function() {
     reporter.report('http://example.com', pass);
     expect(stdout.read().toString()).toMatchInlineSnapshot(`

@@ -6,7 +6,9 @@ import strip from 'strip-ansi';
 
 const writeFileP = promisify(writeFile);
 
-function stripResult(object: { [k: string]: string | boolean }): { [k: string]: string | boolean } {
+function stripResult(object: {
+  [k: string]: string | boolean;
+}): { [k: string]: string | boolean } {
   const ret = Object.create(null);
   for (const [k, v] of Object.entries(object)) {
     ret[k] = typeof v === 'string' ? strip(v) : v;
@@ -21,7 +23,6 @@ function mapToObj(map: Map<string, TestResult>): { [k: string]: TestResult } {
   }
   return obj;
 }
-
 
 export default class JSONReporter implements Reporter {
   path: string;
