@@ -1,4 +1,4 @@
-import Crawler from '../crawler';
+import Crawler from '../Crawler';
 import DummyDriver from '../driver/dummy';
 import { performance } from 'perf_hooks';
 import { CrawlerRequest } from '../types';
@@ -36,6 +36,11 @@ describe('Crawler', () => {
     })();
     const c = new Crawler(requests, new DummyDriver());
     await expect(all(c.crawl())).resolves.toHaveLength(1);
+  });
+  it('Should throw a meaningful error when an invalid iterator is given', function() {
+    expect(() => {
+      new Crawler((1 as unknown) as AsyncIterable<CrawlerRequest>);
+    }).toThrow('Unable to create an async iterator from the request iterable.');
   });
 
   it('Should respect concurrency in crawling', async () => {
@@ -104,5 +109,13 @@ describe('Crawler', () => {
         error: 'foo'
       }
     ]);
+  });
+
+  it('Should fail if any item in the iterator is not in the shape of a request', async function() {
+    const items = ['foo'];
+    const crawler = new Crawler(items as Iterable<CrawlerRequest>);
+    await expect(all(crawler.crawl(1))).rejects.toThrow(
+      'This item does not look like a crawler request: foo'
+    );
   });
 });

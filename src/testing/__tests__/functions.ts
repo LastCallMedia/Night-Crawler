@@ -1,11 +1,11 @@
 import { crawl, test, after } from '../functions';
 import TestContext from '../TestContext';
 import { mocked } from 'ts-jest/utils';
-import Crawler from '../../crawler';
+import Crawler from '../../Crawler';
 import { CrawlerRequest } from '../../types';
 
 jest.mock('../TestContext');
-jest.mock('../../crawler');
+jest.mock('../../Crawler');
 
 const MockedContext = mocked(TestContext);
 const MockedCrawler = mocked(Crawler);

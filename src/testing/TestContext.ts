@@ -1,5 +1,5 @@
 import { CrawlerUnit } from '../types';
-import Crawler from '../crawler';
+import Crawler from '../Crawler';
 import { makeResult } from '../cli/util';
 
 interface OneHandler {

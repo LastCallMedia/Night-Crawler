@@ -1,4 +1,4 @@
-import Crawler from './crawler';
+import Crawler from './Crawler';
 import TestContext from './testing/TestContext';
 
 export default Crawler;

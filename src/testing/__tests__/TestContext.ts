@@ -1,10 +1,10 @@
 import TestContext from '../TestContext';
-import Crawler from '../../crawler';
+import Crawler from '../../Crawler';
 import { CrawlerUnit } from '../../types';
 import { makeResult } from '../../cli/util';
 import { mocked } from 'ts-jest/utils';
 
-jest.mock('../../crawler');
+jest.mock('../../Crawler');
 
 async function all<T extends unknown>(
   iterator: AsyncIterable<T>

@@ -1,15 +1,11 @@
 import debug from 'debug';
 import NativeDriver from './driver/native';
-import { toAsyncIterable } from './cli/util';
+import { isCrawlerRequest, toAsyncIterable } from './util';
 
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
 
-import { Driver, CrawlerRequest, CrawlerUnit } from './types';
-
-export type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
-  | Iterable<T>
-  | AsyncIterable<T>;
+import { RequestIterable, Driver, CrawlerRequest, CrawlerUnit } from './types';
 
 export default class Crawler {
   driver: Driver;
@@ -39,6 +35,11 @@ export default class Crawler {
     const queueOne = async (): Promise<void> => {
       const next = await iterator.next();
       if (next.value) {
+        if (!isCrawlerRequest(next.value)) {
+          throw new Error(
+            `This item does not look like a crawler request: ${next.value.toString()}`
+          );
+        }
         const prom = this._fetch(next.value)
           .then(collectToBuffer, collectToBuffer)
           .finally(() => pool.delete(prom));
@@ -61,11 +62,6 @@ export default class Crawler {
       while (buffer.length > 0) {
         yield buffer.pop() as CrawlerUnit;
       }
-    }
-
-    // Yield any leftover buffered results.
-    while (buffer.length > 0) {
-      yield buffer.pop() as CrawlerUnit;
     }
   }
 
