@@ -1,6 +1,4 @@
 import Crawler from './Crawler';
-import TestContext from './testing/TestContext';
 
-export default Crawler;
-export { Crawler, TestContext };
+export {Crawler};
 export * from './testing/functions';

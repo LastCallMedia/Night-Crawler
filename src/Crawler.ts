@@ -71,7 +71,7 @@ export default class Crawler {
    * @param req
    * @returns {Promise.<T>}
    */
-  async _fetch(req: CrawlerRequest): Promise<CrawlerUnit> {
+  private async _fetch(req: CrawlerRequest): Promise<CrawlerUnit> {
     log(`Fetching ${req.url}`);
 
     try {

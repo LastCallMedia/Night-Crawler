@@ -24,6 +24,6 @@ module.exports = crawl('Homepage', function() {
     })
 
     return [
-        {url: 'https://www.example.com/'}
+        {url: 'https://www.example.com/', driverOptions: {}}
     ]
 })
