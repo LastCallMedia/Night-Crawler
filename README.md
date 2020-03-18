@@ -12,24 +12,21 @@ yarn add lastcall-nightcrawler
 Define your crawler by creating a `nightcrawler.js` file, like this:
 ```js
 # nightcrawler.js
-const Crawler = require('lastcall-nightcrawler');
-const Number  = Crawler.metrics.Number;
+const {crawl, test} = require('./dist');
+const expect = require('expect');
 
-const myCrawler = new Crawler('My Crawler');
+module.exports = crawl('Response code validation', function() {
+  test('Should return 2xx', function(unit) {
+    expect(unit.response.statusCode).toBeGreaterThanOrEqual(200);
+    expect(unit.response.statusCode).toBeLessThan(300);
+  });
 
-myCrawler.on('setup', function(crawler) {
-   // On setup, give the crawler a list of URLs to crawl.
-   crawler.enqueue('http://localhost/'); 
-   crawler.enqueue('http://localhost/foo'); 
+  return [
+    {url: 'https://example.com'},
+    {url: 'https://example.com?q=1'},
+    {url: 'https://example.com?q=2'}
+  ];
 });
-
-myCrawler.on('analyze', function(crawlReport, analysis) {
-    // On analysis, derive the metrics you need from the
-    // array of collected data.
-    analysis.addMetric('count', new Number('Total Requests', 0, crawlReport.data.length));
-});
-
-module.exports = myCrawler;
 ```
 Run your crawler:
 ```bash
@@ -37,115 +34,91 @@ Run your crawler:
 node_modules/.bin/nightcrawler crawl
 ```
 
-Queueing Requests
------------------
-Requests can be queued during the `setup` event.  You can queue a new request by calling the `enqueue()` method, using either a string (representing the URL) or an object containing a `url` property.  If you pass an object, you will have access to that object's properties later on during analysis.
+Specifying what URLs to crawl
+-----------------------------
+
+The `crawl` function expects a return value of an iterable (or async iterable) containing "requests".  The simplest version of this is just an array of objects that have a `url` property.  Eg:
+```js
+module.exports = crawl('Crawl a static list of URLs', function() {
+
+    return [
+        {url: 'https://example.com'}
+    ]
+});
+```
+
+For more advanced use cases, you may want to use async generators to fetch a list of URLs from somewhere else (eg: a database).  Eg:
 
 ```js
-myCrawler.on('setup', function(crawler) {
-   // This works
-   crawler.enqueue('http://localhost/'); 
-   // So does this:
-   crawler.enqueue({
-     url: 'http://localhost/foo',
-     group: 'awesome'
-   }); 
-});
+async function* getURLs() {
+    const result = await queryDB();
+    for(const url of result) {
+        yield {url: url};
+    }
+}
 
-myCrawler.on('analyze', function(crawlReport, analysis) {
-    var awesomeRequests = crawlReport.data.filter(function(point) {
-        // *group property is only available if you added it during queuing.
-        return point.group === 'awesome';
-    });
-    // Do additional analysis only on pages in the awesome group.
-    analysis.addMetric('awesome.count', new Number('Awesome Requests', 0, awesomeRequests.length));
+module.exports = crawl('Crawl a dynamic list of URLs', function() {
+
+    return getURLs();
 })
 ```
 
-Collecting data
----------------
-By default, only the following information is collected for each response:
-* `url` (string) : The URL that was crawled.
-* `error` (bool) : Whether the response was determined to be an error response.
-* `status` (int): The HTTP status code received.
-* `backendResponseTime` (int): The duration of HTTP server response (see the [request module's documentation](https://github.com/request/request) on `timingPhases.firstByte`).
+Performing assertions on responses
+----------------------------------
 
-If there is other data you're interested in knowing, you can collect it like this:
-```js
-// Collect the `Expires` header for each request.
-myCrawler.on('response', function(response, data) {
-   data.expires = response.headers['expires']; 
-});
-```
-The response event is triggered on request success or error, as long as the server sends a response.  Anything put into the `data` object will end up in the final JSON report.
-
-
-Dynamic Crawling
-----------------
-You may wish to be able to crawl a list of URLs that isn't static (it's determined at runtime).  For example, you may want to query a remote API or a database and enqueue a list of URLs based on that data. To support this, the `setup` event allows you to return a promise.
+One of the primary goals of Nightcrawler is to detect URLs that don't meet your expectations.  To achieve this, you can use the `test` function within a `crawl` to make assertions about the response received.
 
 ```js
-// Fetch a list of URLs from a remote API, then enqueue them all.
-myCrawler.on('setup', function(crawler) {
-    return fetchData().then(function(myData) {
-        myData.forEach(function(url) {
-            crawler.enqueue(url);
-        })
+const {crawl, test} = require('./dist');
+// Use the expect module from NPM for assertions.
+// You can use any assertion library, including the built-in assert module.
+const expect = require('expect');
+
+module.exports = crawl('Check that the homepage is cacheable', function() {
+    
+    test('Should have cache-control header', function(unit) {
+        expect(unit.response.headers).toHaveProperty('cache-control');
+        expect(unit.response.headers['cache-control']).toBe('public; max-age: 1800');
     })
-})
-```
 
-Analysis
---------
-Once the crawl has been completed, you will probably want to analyze the data in some way.  Data analysis in Nightcrawler is intentionally loose - the crawler fires an `analyze` event with an array of collected data, and you are responsible for analyzing your own data.  Here are some examples of things you might do during analysis:
- 
- ```js
-const Crawler = require('lastcall-nightcrawler');
-const Number  = Crawler.metrics.Number;
-const Milliseconds = Crawler.metrics.Milliseconds;
-const Percent = Crawler.metrics.Percent;
-
-myCrawler.on('analyze', function(crawlReport, analysis) {
-    var data = crawlReport.data;
-    
-    // Calculate the number of requests that were made:
-    analysis.addMetric('count', new Number('Total Requests', 0, data.length));
-    
-    // Calculate the average response time:
-    var avgTime = data.reduce(function(sum, dataPoint) {
-        return sum + dataPoint.backendTime
-    }, 0) / data.length;
-    analysis.addMetric('time', new Milliseconds('Avg Response Time', 0, avgTime));
-    
-    // Calculate the percent of requests that were marked failed:
-    var failRatio = data.filter(function(dataPoint) {
-        return dataPoint.fail === true;
-    }).length / data.length;
-    var level = failRatio > 0 ? 2 : 0;
-    analysis.addMetric('fail', new Percent('% Failed', level, failRatio));
-    
-    // Calculate the percent of requests that resulted in a 500 response.
-    var serverErrorRatio = data.filter(function(dataPoint) {
-        return dataPoint.statusCode >= 500;
-    }).length / data.length;
-    var level = serverErrorRatio > 0 ? 2 : 0;
-    analysis.add('500', new Percent('% 500', level, serverErrorRatio));
+    return [{url: 'https://example.com/'}]
 });
 ```
-The [`analysis`](./src/analysis.js) object can consist of many metrics, added through the `add` method. See [`src/metrics.js`](./src/metrics.js) for more information about metrics.
 
-Analysis can also be performed on individual requests to mark them passed or failed.
+The `test` function will receive a `unit` of crawler work, which includes the following properties:
+
+* `request`: The request, as you passed it into the Crawler. This will include any additional properties you passed in, and you can use those properties to do conditional checking of units of work.
+* `response`: The response object, as returned by the Driver.  The default `NativeDriver` will produce a response in the shape of a Node [`http.IncomingMessage`](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object. All `response` objects are guaranteed to have both a `statusCode` and a `time` property.
+
+Performing assertions about the overall status of the crawl
+-----------------------------------------------------------
+
+For some use cases, you will want make assertions about many requests.  For example, checking the average response type of all requests.  To do this, you may use the `after` function to perform assertions after all the URLs have been requested.  Just use the `test` function to collect the data you need from each request, then perform the final assertion in `after`:
 
 ```js
-myCrawler.on('analyze', function(crawlReport, analysis) {
-    var data = crawlReport.data;
+const {crawl, test, after} = require('./dist');
+const expect = require('expect');
 
-    data.forEach(function(request) {
-       var level = request.statusCode > 499 ? 2 : 0
-       analysis.addResult(request.url, level)
-    });
-})
+module.exports = crawl('Check that pages load quickly', function() {
+    const times = [];
+
+    test('Collect response time', function(unit) {
+        times.push(unit.response.time);
+    })
+    
+    after('Response time should be less than 500ms', function() {
+        const sum = times.reduce((total, value) => total + value, 0);
+        expect(sum / times.length).toBeLessThan(500);
+    })
+
+    return [{url: 'https://example.com/'}]
+});
 ```
+
+Drivers
+-------
+
+Right now, there is only one "Driver" available for making requests.  It uses Node's built-in `http` and `https` modules to issue HTTP requests to the target URL. In the future, we may have additional drivers available.
 
 CI Setup
 --------
