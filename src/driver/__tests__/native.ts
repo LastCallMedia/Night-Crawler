@@ -132,4 +132,22 @@ describe('Native Driver', function() {
       driver.fetch({ url: 'https://www.example.com/' })
     ).resolves.toBeTruthy();
   });
+
+  it('Should allow options to be overridden using driverOptions.', async function() {
+    nock('http://www.example.com')
+      .get('/')
+      .basicAuth({
+        user: 'john',
+        pass: 'doe'
+      })
+      .reply(200);
+    const driver = new NativeDriver();
+    const response = await driver.fetch({
+      url: 'http://www.example.com/',
+      driverOptions: {
+        auth: 'john:doe'
+      }
+    });
+    expect(response.statusCode).toBe(200);
+  });
 });

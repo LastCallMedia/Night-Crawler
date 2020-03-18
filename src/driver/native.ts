@@ -4,11 +4,10 @@ import http from 'http';
 import { URL } from 'url';
 import { performance } from 'perf_hooks';
 
-type NativeDriverResponse = {
+interface NativeDriverResponse extends http.IncomingMessage {
   statusCode: number;
-  statusMessage?: string;
   time: number;
-};
+}
 
 export default class NativeDriver implements Driver<NativeDriverResponse> {
   opts: https.RequestOptions;
@@ -19,6 +18,7 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
   fetch(crawlRequest: CrawlerRequest): Promise<NativeDriverResponse> {
     return new Promise((resolve, reject) => {
       const parsed = new URL(crawlRequest.url);
+      const requestOpts = crawlRequest.driverOptions ?? {};
       const theseOptions = Object.assign(
         {
           protocol: parsed.protocol,
@@ -28,15 +28,17 @@ export default class NativeDriver implements Driver<NativeDriverResponse> {
           method: 'GET',
           timeout: 15000
         },
-        this.opts
+        this.opts,
+        requestOpts
       );
       const start = performance.now();
       const req = this._getDriver(parsed).request(theseOptions, res => {
-        resolve({
-          statusCode: res.statusCode ?? 0,
-          statusMessage: res.statusMessage,
-          time: performance.now() - start
-        });
+        resolve(
+          Object.assign(res, {
+            time: performance.now() - start,
+            statusCode: res.statusCode ?? 0
+          })
+        );
       });
       req.on('timeout', () => {
         req.abort();

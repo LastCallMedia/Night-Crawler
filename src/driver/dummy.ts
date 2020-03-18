@@ -1,4 +1,4 @@
-import { Driver, CrawlerRequest, CrawlerResponse } from '../types';
+import { Driver, CrawlerRequest, DriverResponse } from '../types';
 import { performance } from 'perf_hooks';
 
 type DummyResponse = {
@@ -23,7 +23,7 @@ function delayReject<T>(value: unknown, timeout: number): Promise<T> {
 export default class DummyDriver implements Driver {
   fetch(
     req: CrawlerRequest & { shouldFail?: string }
-  ): Promise<CrawlerResponse> {
+  ): Promise<DriverResponse> {
     const start = performance.now();
     const delay = 'delay' in req ? parseInt(req.delay as string) : 0;
     if ('shouldFail' in req && req.shouldFail) {

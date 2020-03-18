@@ -1,6 +1,6 @@
 export type CrawlerRequest = {
   url: string;
-  driverOptions?: unknown;
+  driverOptions?: {};
   groups?: string[];
   [key: string]: unknown;
 };
@@ -12,19 +12,15 @@ export type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
 export type DriverResponse = {
   statusCode: number;
   time: number;
-  [key: string]: unknown;
 };
-export type CrawlerResponse = DriverResponse;
 
 export type CrawlerUnit = {
   error?: string | Error;
   request: CrawlerRequest;
-  response?: CrawlerResponse;
+  response?: DriverResponse;
 };
 
-export interface Driver<
-  ResponseType extends CrawlerResponse = CrawlerResponse
-> {
+export interface Driver<ResponseType extends DriverResponse = DriverResponse> {
   /**
    * Fetch a single URL.
    *
