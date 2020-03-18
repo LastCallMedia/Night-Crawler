@@ -18,9 +18,17 @@ jobs:
           command: npm run test -- --ci --reporters="default" --reporters="jest-junit"
           environment:
             JEST_JUNIT_OUTPUT: "/tmp/junit/jest.xml"
+      - run: npm run build
+      - run:
+          name: "Prepare Integration Tests"
+          command: npm install ../../
+          working_dir: docs/example
+      - run:
+          name: "Run integration tests"
+          command: node_modules/.bin/nightcrawler --config nightcrawler.js crawl
+          working_dir: docs/example
       - store_test_results:
           path: /tmp/junit
-      - run: npm run build
       - persist_to_workspace:
           root: /srv
           paths:
