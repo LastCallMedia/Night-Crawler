@@ -22,11 +22,11 @@ jobs:
       - run:
           name: "Prepare Integration Tests"
           command: npm install ../../
-          working_dir: docs/example
+          working_directory: docs/example
       - run:
           name: "Run integration tests"
           command: node_modules/.bin/nightcrawler --config nightcrawler.js crawl
-          working_dir: docs/example
+          working_directory: docs/example
       - store_test_results:
           path: /tmp/junit
       - persist_to_workspace:
