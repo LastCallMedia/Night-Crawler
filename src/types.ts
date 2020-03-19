@@ -5,9 +5,9 @@ export type CrawlerRequest = {
   [key: string]: unknown;
 };
 
-export type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
-  | Iterable<T>
-  | AsyncIterable<T>;
+export type RequestIterable =
+  | Iterable<CrawlerRequest>
+  | AsyncIterable<CrawlerRequest>;
 
 export type DriverResponse = {
   statusCode: number;
