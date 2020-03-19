@@ -2,53 +2,20 @@ import { FailedAnalysisError } from '../errors';
 import ConsoleReporter from '../formatters/ConsoleReporter';
 import JUnitReporter from '../formatters/JUnitReporter';
 import JSONReporter from '../formatters/JSONReporter';
-import { BuilderCallback } from 'yargs';
-import { ConfigArgs } from '../index';
 import { hasFailure } from '../util';
 import Reporter from '../formatters/Reporter';
+import TestContext from '../../testing/TestContext';
 
-export interface CrawlCommandArgs extends ConfigArgs {
+export type CrawlArgs = {
+  context: TestContext;
   concurrency?: number;
-  silent?: boolean;
   json?: string;
   junit?: string;
+  silent?: boolean;
   stdout?: NodeJS.WritableStream & { columns: number };
-}
-
-export const command = 'crawl [crawlerfile]';
-export const describe =
-  'crawls a defined set of URLs and runs tests against the received responses.';
-export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = yargs => {
-  yargs.option('concurrency', {
-    alias: 'c',
-    describe: 'number of requests allowed in-flight at once',
-    type: 'number',
-    required: true,
-    default: 3
-  });
-  yargs.option('silent', {
-    alias: 'n',
-    describe: 'silence all output',
-    type: 'boolean',
-    default: false
-  });
-  yargs.option('json', {
-    alias: 'j',
-    describe: 'filename to write JSON report to',
-    normalize: true,
-    type: 'string',
-    default: ''
-  });
-  yargs.option('junit', {
-    alias: 'u',
-    describe: 'filename to write JUnit report to',
-    normalize: true,
-    type: 'string',
-    default: ''
-  });
 };
 
-function getReporters(argv: CrawlCommandArgs): Reporter[] {
+function getReporters(argv: CrawlArgs): Reporter[] {
   const reporters = [];
   if (!argv.silent) {
     reporters.push(new ConsoleReporter(argv.stdout ?? process.stdout));
@@ -61,7 +28,7 @@ function getReporters(argv: CrawlCommandArgs): Reporter[] {
   }
   return reporters;
 }
-export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
+export const handler = async function(argv: CrawlArgs): Promise<void> {
   const { context, concurrency = 3 } = argv;
   let hasAnyFailure = false;
 

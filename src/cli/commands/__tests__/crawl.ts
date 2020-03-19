@@ -1,9 +1,6 @@
-import { CrawlCommandArgs, handler } from '../crawl';
+import { handler } from '../crawl';
 import stream from 'stream';
 import { FailedAnalysisError } from '../../errors';
-import yargs from 'yargs';
-
-import * as crawlModule from '../crawl';
 import TestContext from '../../../testing/TestContext';
 
 import ConsoleReporter from '../../formatters/ConsoleReporter';
@@ -21,59 +18,6 @@ jest.mock('../../formatters/JSONReporter');
 const MockedConsoleReporter = mocked(ConsoleReporter);
 const MockedJUnitReporter = mocked(JUnitReporter);
 const MockedJSONReporter = mocked(JSONReporter);
-
-function runWithHandler(
-  argv: string,
-  handler: (argv: CrawlCommandArgs) => void
-): Promise<Record<string, unknown>> {
-  let invoked = 0;
-  const cmd = Object.assign({}, crawlModule, {
-    handler: (argv: CrawlCommandArgs) => {
-      invoked++;
-      handler(argv);
-    }
-  });
-
-  return new Promise((res, rej) => {
-    yargs
-      .command(cmd)
-      .parse(argv, (err: Error, argv: Record<string, unknown>) => {
-        if (err) return rej(err);
-        if (!invoked) return rej(new Error('handler was not invoked'));
-        res(argv);
-      });
-  });
-}
-describe('Crawl Command', function() {
-  it('Has defaults', function() {
-    return runWithHandler('crawl', argv => {
-      expect(argv.silent).toEqual(false);
-      expect(argv.json).toEqual('');
-      expect(argv.junit).toEqual('');
-      expect(argv.concurrency).toEqual(3);
-    });
-  });
-  it('Passes silent', function() {
-    return runWithHandler('crawl --silent', argv => {
-      expect(argv.silent).toEqual(true);
-    });
-  });
-  it('Passes junit', function() {
-    return runWithHandler('crawl --junit foo/bar.xml', argv => {
-      expect(argv.junit).toEqual('foo/bar.xml');
-    });
-  });
-  it('Passes json', function() {
-    return runWithHandler('crawl --json foo/bar.json', argv => {
-      expect(argv.json).toEqual('foo/bar.json');
-    });
-  });
-  it('Passes concurrency', function() {
-    return runWithHandler('crawl --concurrency 5', argv => {
-      expect(argv.concurrency).toBe(5);
-    });
-  });
-});
 
 class MockTTY extends stream.PassThrough {
   columns: number;

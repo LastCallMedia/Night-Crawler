@@ -19,8 +19,8 @@ export type TestResultMap<T extends TestResult = TestResult> = Map<string, T>;
 export default class TestContext {
   description: string;
   crawler?: Crawler;
-  testHandlers: OneHandler[];
-  afterHandlers: AfterHandler[];
+  private testHandlers: OneHandler[];
+  private afterHandlers: AfterHandler[];
 
   constructor(description: string) {
     this.description = description;
