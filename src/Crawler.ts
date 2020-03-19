@@ -1,5 +1,5 @@
 import debug from 'debug';
-import NativeDriver from './driver/native';
+import native from './driver/native';
 import { isCrawlerRequest, toAsyncIterable } from './util';
 
 const log = debug('nightcrawler:info');
@@ -11,7 +11,7 @@ export default class Crawler {
   driver: Driver;
   iterator: AsyncIterable<CrawlerRequest>;
 
-  constructor(requests: RequestIterable, driver: Driver = new NativeDriver()) {
+  constructor(requests: RequestIterable, driver: Driver = native) {
     this.iterator = toAsyncIterable(requests);
     this.driver = driver;
   }
@@ -75,7 +75,7 @@ export default class Crawler {
     log(`Fetching ${req.url}`);
 
     try {
-      const res = await this.driver.fetch(req);
+      const res = await this.driver(req.url, req.driverOptions);
       return {
         request: req,
         response: res
