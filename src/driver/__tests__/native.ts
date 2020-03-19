@@ -91,7 +91,7 @@ describe('Native Driver', function() {
     ).resolves.toBeTruthy();
   });
 
-  it('Should allow options to be overridden using driverOptions.', async function() {
+  it('Should allow options to be overridden using options.', async function() {
     nock('http://www.example.com')
       .get('/')
       .basicAuth({

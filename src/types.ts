@@ -1,7 +1,9 @@
 export type CrawlerRequest = {
+  // The absolute URL to crawl.
   url: string;
-  driverOptions?: DriverOptions;
-  groups?: string[];
+  // Options to forward to the driver.
+  options?: DriverOptions;
+  // Any other properties the user wants to add.
   [key: string]: unknown;
 };
 

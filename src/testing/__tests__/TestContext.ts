@@ -2,19 +2,10 @@ import TestContext from '../TestContext';
 import Crawler from '../../Crawler';
 import { CrawlerUnit } from '../../types';
 import { makeResult } from '../../cli/util';
+import { all } from '../../util';
 import { mocked } from 'ts-jest/utils';
 
 jest.mock('../../Crawler');
-
-async function all<T extends unknown>(
-  iterator: AsyncIterable<T>
-): Promise<T[]> {
-  const collected = [];
-  for await (const i of iterator) {
-    collected.push(i);
-  }
-  return collected;
-}
 
 describe('TestContext', function() {
   const units = [

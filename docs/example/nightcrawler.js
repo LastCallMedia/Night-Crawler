@@ -27,8 +27,8 @@ module.exports = crawl('Homepage', function() {
 
     // Return any iterable/async iterable filled with request-shaped objects.
     return [
-        // driverOptions can be used to pass options to the driver.
+        // options can be used to pass options to the driver.
         // For example, passing {auth: 'foo:bar'} will enable basic auth.
-        {url: 'https://www.example.com/', driverOptions: {}}
+        {url: 'https://www.example.com/', options: {}}
     ]
 })

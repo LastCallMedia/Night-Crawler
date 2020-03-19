@@ -75,7 +75,7 @@ export default class Crawler {
     log(`Fetching ${req.url}`);
 
     try {
-      const res = await this.driver(req.url, req.driverOptions);
+      const res = await this.driver(req.url, req.options);
       return {
         request: req,
         response: res

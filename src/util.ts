@@ -37,3 +37,11 @@ export function isCrawlerRequest(request: unknown): request is CrawlerRequest {
     typeof (request as CrawlerRequest).url === 'string'
   );
 }
+
+export async function all<T>(iterator: AsyncIterable<T>): Promise<T[]> {
+  const collected = [];
+  for await (const i of iterator) {
+    collected.push(i);
+  }
+  return collected;
+}

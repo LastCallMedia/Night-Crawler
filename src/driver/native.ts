@@ -20,20 +20,20 @@ function _getDriver(url: URL): typeof http | typeof https {
   }
 }
 
+export type Options = http.RequestOptions | https.RequestOptions;
+
 const native: Driver<NativeDriverResponse> = (url, options: {} = {}) => {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
-    const theseOptions = Object.assign(
-      {
-        protocol: parsed.protocol,
-        host: parsed.hostname,
-        port: parsed.port,
-        path: parsed.pathname,
-        method: 'GET',
-        timeout: 15000
-      },
-      options
-    );
+    const theseOptions = {
+      protocol: parsed.protocol,
+      host: parsed.hostname,
+      port: parsed.port,
+      path: parsed.pathname,
+      method: 'GET',
+      timeout: 15000,
+      ...options
+    };
     const start = performance.now();
     const req = _getDriver(parsed).request(theseOptions, response => {
       resolve(

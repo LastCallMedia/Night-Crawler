@@ -1,18 +1,27 @@
 import Crawler from '../Crawler';
-import dummy from '../driver/dummy';
 import { performance } from 'perf_hooks';
-import { CrawlerRequest } from '../types';
+import { CrawlerRequest, Driver } from '../types';
 import native from '../driver/native';
+import { all } from '../util';
 
-async function all<T extends unknown>(
-  iterator: AsyncIterable<T>
-): Promise<T[]> {
-  const collected = [];
-  for await (const i of iterator) {
-    collected.push(i);
-  }
-  return collected;
+function delay(ms: number): Promise<void> {
+  return new Promise<void>(resolve => setTimeout(resolve, ms));
 }
+
+const dummy: Driver = (
+  url: string,
+  options: { delay?: number; shouldFail?: string } = {}
+) => {
+  const start = performance.now();
+  const delayMS = options.delay ?? 0;
+  if (options.shouldFail !== undefined) {
+    return delay(delayMS).then(() => Promise.reject(options.shouldFail));
+  }
+  return delay(delayMS).then(() => ({
+    statusCode: 200,
+    time: performance.now() - start
+  }));
+};
 
 describe('Crawler', () => {
   it('Should default to the native driver', async () => {
@@ -54,7 +63,7 @@ describe('Crawler', () => {
       for (let i = 0; i < 4; i++) {
         yield {
           url: i.toString(),
-          driverOptions: { delay: 200 },
+          options: { delay: 200 },
           created: performance.now() as number
         };
       }
@@ -100,7 +109,7 @@ describe('Crawler', () => {
   });
 
   it('Should return errors via the generator', async () => {
-    const request = { url: 'foo', driverOptions: { shouldFail: 'foo' } };
+    const request = { url: 'foo', options: { shouldFail: 'foo' } };
     const c = new Crawler([request], dummy);
     const result = await all(c.crawl());
     expect(result).toEqual([
