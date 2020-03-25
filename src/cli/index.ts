@@ -1,33 +1,60 @@
-import yargs, { MiddlewareFunction } from 'yargs';
-import path from 'path';
-import TestContext from '../testing/TestContext';
+import parser from 'minimist';
+import crawl from './commands/crawl';
+import version from './commands/version';
+import help from './commands/help';
+import { loadContext } from './util';
 
-interface PreloadCrawlerArgs {
+export type StdoutShape = NodeJS.WritableStream & { columns: number };
+
+export type ArgVShape = {
   config: string;
-}
-export interface ConfigArgs {
-  config?: string;
-  context: TestContext;
-}
-
-const loadConfig: MiddlewareFunction<PreloadCrawlerArgs> = argv => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const context = require(path.resolve(process.cwd(), argv.config));
-  if (context instanceof TestContext) {
-    return {
-      context
-    };
-  }
-  throw new Error(
-    `The configuration file at ${argv.config} does not export a valid test context.`
-  );
+  concurrency?: string | number;
+  json?: string;
+  junit?: string;
+  silent?: boolean;
+  help?: boolean;
+  version?: boolean;
 };
 
-yargs
-  .options({
-    config: { type: 'string', default: './nightcrawler.js' }
-  })
-  .commandDir('commands')
-  .middleware(loadConfig)
-  .demandCommand(1, '')
-  .help().argv;
+function massageConcurrency(
+  concurrency: string | number | undefined,
+  defaultValue: number
+): number {
+  if (concurrency === undefined || concurrency === '') {
+    return defaultValue;
+  }
+  return typeof concurrency === 'string' ? parseInt(concurrency) : concurrency;
+}
+
+export default async function(
+  input: string[],
+  stdout: StdoutShape,
+  cwd: string
+): Promise<void> {
+  const argv = parser<ArgVShape>(input, {
+    string: ['config', 'json', 'concurrency', 'junit'],
+    boolean: ['silent', 'help', 'version'],
+    default: {
+      config: './nightcrawler.js',
+      concurrency: 5,
+      silent: false,
+      help: false,
+      version: false
+    }
+  });
+
+  if (argv.help) {
+    return help(stdout);
+  } else if (argv.version) {
+    return version(stdout);
+  } else {
+    return crawl(
+      {
+        ...argv,
+        concurrency: massageConcurrency(argv.concurrency, 5),
+        context: loadContext(argv.config, cwd)
+      },
+      stdout
+    );
+  }
+}

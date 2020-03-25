@@ -1,35 +1,32 @@
 export type CrawlerRequest = {
+  // The absolute URL to crawl.
   url: string;
-  driverOptions?: unknown;
-  groups?: string[];
+  // Options to forward to the driver.
+  options?: DriverOptions;
+  // Any other properties the user wants to add.
   [key: string]: unknown;
 };
 
-export type RequestIterable<T extends CrawlerRequest = CrawlerRequest> =
-  | Iterable<T>
-  | AsyncIterable<T>;
+export type RequestIterable =
+  | Iterable<CrawlerRequest>
+  | AsyncIterable<CrawlerRequest>;
 
 export type DriverResponse = {
   statusCode: number;
   time: number;
-  [key: string]: unknown;
 };
-export type CrawlerResponse = DriverResponse;
 
 export type CrawlerUnit = {
   error?: string | Error;
   request: CrawlerRequest;
-  response?: CrawlerResponse;
+  response?: DriverResponse;
 };
 
+type DriverOptions = Record<string, unknown>;
+
 export interface Driver<
-  ResponseType extends CrawlerResponse = CrawlerResponse
+  ResponseType extends DriverResponse = DriverResponse,
+  OptionsType extends DriverOptions = {}
 > {
-  /**
-   * Fetch a single URL.
-   *
-   * The driver should return a promise which is only rejected in the case
-   * where the response is a complete error.
-   */
-  fetch(req: CrawlerRequest): Promise<ResponseType>;
+  (url: string, options?: DriverOptions): Promise<ResponseType>;
 }

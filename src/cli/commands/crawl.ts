@@ -2,56 +2,23 @@ import { FailedAnalysisError } from '../errors';
 import ConsoleReporter from '../formatters/ConsoleReporter';
 import JUnitReporter from '../formatters/JUnitReporter';
 import JSONReporter from '../formatters/JSONReporter';
-import { BuilderCallback } from 'yargs';
-import { ConfigArgs } from '../index';
 import { hasFailure } from '../util';
 import Reporter from '../formatters/Reporter';
+import TestContext from '../../testing/TestContext';
+import { StdoutShape } from '../index';
 
-export interface CrawlCommandArgs extends ConfigArgs {
+type CommandArgv = {
   concurrency?: number;
   silent?: boolean;
   json?: string;
   junit?: string;
-  stdout?: NodeJS.WritableStream & { columns: number };
-}
-
-export const command = 'crawl [crawlerfile]';
-export const describe =
-  'crawls a defined set of URLs and runs tests against the received responses.';
-export const builder: BuilderCallback<ConfigArgs, CrawlCommandArgs> = yargs => {
-  yargs.option('concurrency', {
-    alias: 'c',
-    describe: 'number of requests allowed in-flight at once',
-    type: 'number',
-    required: true,
-    default: 3
-  });
-  yargs.option('silent', {
-    alias: 'n',
-    describe: 'silence all output',
-    type: 'boolean',
-    default: false
-  });
-  yargs.option('json', {
-    alias: 'j',
-    describe: 'filename to write JSON report to',
-    normalize: true,
-    type: 'string',
-    default: ''
-  });
-  yargs.option('junit', {
-    alias: 'u',
-    describe: 'filename to write JUnit report to',
-    normalize: true,
-    type: 'string',
-    default: ''
-  });
+  context: TestContext;
 };
 
-function getReporters(argv: CrawlCommandArgs): Reporter[] {
+function getReporters(argv: CommandArgv, stdout: StdoutShape): Reporter[] {
   const reporters = [];
   if (!argv.silent) {
-    reporters.push(new ConsoleReporter(argv.stdout ?? process.stdout));
+    reporters.push(new ConsoleReporter(stdout));
   }
   if (argv.junit?.length) {
     reporters.push(new JUnitReporter(argv.junit));
@@ -61,11 +28,16 @@ function getReporters(argv: CrawlCommandArgs): Reporter[] {
   }
   return reporters;
 }
-export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
-  const { context, concurrency = 3 } = argv;
+
+export default async function(
+  argv: CommandArgv,
+  stdout: StdoutShape
+): Promise<void> {
+  const { context, concurrency = 5 } = argv;
+  const reporters: Reporter[] = getReporters(argv, stdout);
+
   let hasAnyFailure = false;
 
-  const reporters: Reporter[] = getReporters(argv);
   await Promise.all(reporters.map(reporter => reporter.start()));
 
   for await (const [url, result] of context.crawl(concurrency)) {
@@ -78,4 +50,4 @@ export const handler = async function(argv: CrawlCommandArgs): Promise<void> {
   if (hasAnyFailure) {
     throw new FailedAnalysisError('Testing reported an error.');
   }
-};
+}

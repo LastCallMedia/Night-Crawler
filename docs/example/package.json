@@ -1,0 +1,7 @@
+{
+  "name": "lastcall-nightcrawler-examples",
+  "dependencies": {
+    "expect": "^25.1.0",
+    "lastcall-nightcrawler": "^2.0.0"
+  }
+}

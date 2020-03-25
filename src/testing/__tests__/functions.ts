@@ -12,8 +12,8 @@ const MockedCrawler = mocked(Crawler);
 
 describe('crawl function', function() {
   beforeEach(function() {
-    MockedContext.mockReset();
-    MockedCrawler.mockReset();
+    MockedContext.mockClear();
+    MockedCrawler.mockClear();
   });
 
   it('crawl should create a crawler when an iterable is returned.', function() {

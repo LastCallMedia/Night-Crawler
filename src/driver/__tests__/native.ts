@@ -1,79 +1,97 @@
 import nock from 'nock';
-import NativeDriver from '../native';
+import native from '../native';
 
 describe('Native Driver', function() {
   it('Should throw an error for invalid schemes', async function() {
-    await expect(
-      new NativeDriver().fetch({ url: 'foo://bar' })
-    ).rejects.toThrow('Unknown protocol: foo:');
+    await expect(native('foo://bar')).rejects.toThrow('Unknown protocol: foo:');
   });
 
-  it('Should return a response for an HTTP crawlRequest', function() {
+  it('Should return a response for an HTTP crawlRequest', async function() {
     nock('http://www.example.com')
       .get('/')
       .reply(201);
 
-    return new NativeDriver()
-      .fetch({ url: 'http://www.example.com' })
-      .then(function(res) {
-        expect(res.statusCode).toEqual(201);
-      });
+    const response = await native('http://www.example.com');
+    expect(response.statusCode).toEqual(201);
   });
-  it('Should return a response for an HTTPS crawlRequest', function() {
+  it('Should return a response for an HTTPS crawlRequest', async function() {
     nock('https://www.example.com')
       .get('/')
       .reply(201);
 
-    return new NativeDriver()
-      .fetch({ url: 'https://www.example.com' })
-      .then(function(res) {
-        expect(res.statusCode).toEqual(201);
-      });
+    const response = await native('https://www.example.com');
+    expect(response.statusCode).toEqual(201);
   });
 
-  it('Should reply with the response even if it is a 500', function() {
+  it('Should reply with the response even if it is a 500', async function() {
     nock('http://www.example.com')
       .get('/')
       .reply(500);
 
-    return new NativeDriver()
-      .fetch({ url: 'http://www.example.com' })
-      .then(function(res) {
-        expect(res.statusCode).toEqual(500);
-      });
+    const response = await native('http://www.example.com');
+    expect(response.statusCode).toEqual(500);
   });
 
-  it('Should reply with the time the request took.', function() {
+  it('Should reply with the time the request took.', async function() {
     nock('http://www.example.com')
       .get('/')
       .reply(200);
 
-    return new NativeDriver()
-      .fetch({ url: 'http://www.example.com' })
-      .then(function(res) {
-        expect(res.time).toBeGreaterThan(0);
-      });
+    const response = await native('http://www.example.com');
+    expect(response.time).toBeGreaterThan(0);
   });
 
-  it('Should throw an error in the event of a network issue', function() {
+  it('Should throw an error in the event of a network issue', async function() {
     nock('http://www.example.com')
       .get('/')
       .replyWithError({ code: 'ETIMEDOUT' });
-
-    let called = 0;
-    const d = new NativeDriver();
-    return d
-      .fetch({ url: 'http://www.example.com' })
-      .catch(function(err) {
-        called++;
-        expect(err.code).toEqual('ETIMEDOUT');
-      })
-      .then(function() {
-        expect(called).toEqual(1);
-      });
+    await expect(native('http://www.example.com')).rejects.toEqual({
+      code: 'ETIMEDOUT'
+    });
   });
 
-  it('Should allow request configuration, including authentication', function() {
+  it('Should reject when the socket times out.', async function() {
+    nock('https://www.example.com')
+      .get('/')
+      .socketDelay(500)
+      .reply(200);
+    await expect(
+      native('https://www.example.com/', { timeout: 10 })
+    ).rejects.toThrow('socket hang up');
+  });
+
+  it('Should reject when the request times out', async function() {
+    nock('https://www.example.com')
+      .get('/')
+      .delay(500)
+      .reply(200);
+
+    await expect(
+      native('https://www.example.com/', { timeout: 10 })
+    ).rejects.toThrow('socket hang up');
+  });
+
+  it('Should require the headers to resolve before the timeout', async function() {
+    nock('https://www.example.com')
+      .get('/')
+      .delay({ head: 500 })
+      .reply(200);
+    await expect(
+      native('https://www.example.com/', { timeout: 10 })
+    ).rejects.toThrow('socket hang up');
+  });
+
+  it('Should not require the body to resolve before the timeout', async function() {
+    nock('https://www.example.com')
+      .get('/')
+      .delay({ body: 500 })
+      .reply(200);
+    await expect(
+      native('https://www.example.com/', { timeout: 10 })
+    ).resolves.toBeTruthy();
+  });
+
+  it('Should allow options to be overridden using options.', async function() {
     nock('http://www.example.com')
       .get('/')
       .basicAuth({
@@ -82,54 +100,9 @@ describe('Native Driver', function() {
       })
       .reply(200);
 
-    return new NativeDriver({ auth: 'john:doe' })
-      .fetch({ url: 'http://www.example.com' })
-      .then(function(res) {
-        expect(res.statusCode).toEqual(200);
-      });
-  });
-
-  it('Should reject when the socket times out.', async function() {
-    nock('https://www.example.com')
-      .get('/')
-      .socketDelay(500)
-      .reply(200);
-    const driver = new NativeDriver({ timeout: 10 });
-    await expect(
-      driver.fetch({ url: 'https://www.example.com/' })
-    ).rejects.toThrowError('socket hang up');
-  });
-
-  it('Should reject when the request times out', async function() {
-    nock('https://www.example.com')
-      .get('/')
-      .delay(500)
-      .reply(200);
-    const driver = new NativeDriver({ timeout: 10 });
-    await expect(
-      driver.fetch({ url: 'https://www.example.com/' })
-    ).rejects.toBeTruthy();
-  });
-
-  it('Should require the headers to resolve before the timeout', async function() {
-    nock('https://www.example.com')
-      .get('/')
-      .delay({ head: 500 })
-      .reply(200);
-    const driver = new NativeDriver({ timeout: 10 });
-    await expect(
-      driver.fetch({ url: 'https://www.example.com/' })
-    ).rejects.toBeTruthy();
-  });
-
-  it('Should not require the body to resolve before the timeout', async function() {
-    nock('https://www.example.com')
-      .get('/')
-      .delay({ body: 500 })
-      .reply(200);
-    const driver = new NativeDriver({ timeout: 10 });
-    await expect(
-      driver.fetch({ url: 'https://www.example.com/' })
-    ).resolves.toBeTruthy();
+    const response = await native('http://www.example.com/', {
+      auth: 'john:doe'
+    });
+    expect(response.statusCode).toBe(200);
   });
 });

@@ -1,5 +1,6 @@
 import { TestResultMap, TestResult } from '../../testing/TestContext';
-import { hasFailure } from '../util';
+import { hasFailure, loadContext } from '../util';
+import path from 'path';
 
 function r(obj: { [k: string]: TestResult }): TestResultMap {
   return new Map(Object.entries(obj));
@@ -24,5 +25,27 @@ describe('hasFailure', function() {
       fail: { pass: false, message: 'test' }
     });
     expect(hasFailure(result)).toEqual(true);
+  });
+});
+
+describe('loadContext', function() {
+  const cwd = path.join(__dirname, '..', '__stubs__');
+
+  it('Should fail when context is not the default export', function() {
+    expect(() => {
+      loadContext('./noexport.js', cwd);
+    }).toThrow(
+      'The configuration file at ./noexport.js does not export a valid test context.'
+    );
+  });
+
+  it('Should load when context is the primary export', function() {
+    expect(loadContext('./ok.js', cwd)).toBeTruthy();
+  });
+
+  it('Should fail when the config file does not exist', function() {
+    expect(() => {
+      loadContext('./nonexistent.js', cwd);
+    }).toThrow('Unable to find configuration file at ./nonexistent.js.');
   });
 });

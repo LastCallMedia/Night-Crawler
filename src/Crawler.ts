@@ -1,17 +1,25 @@
 import debug from 'debug';
-import NativeDriver from './driver/native';
-import { isCrawlerRequest, toAsyncIterable } from './util';
+import native from './driver/native';
+import { toAsyncIterable } from './util';
 
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
 
 import { RequestIterable, Driver, CrawlerRequest, CrawlerUnit } from './types';
 
+function isCrawlerRequest(request: unknown): request is CrawlerRequest {
+  return (
+      request !== null &&
+      typeof request === 'object' &&
+      typeof (request as CrawlerRequest).url === 'string'
+  );
+}
+
 export default class Crawler {
   driver: Driver;
   iterator: AsyncIterable<CrawlerRequest>;
 
-  constructor(requests: RequestIterable, driver: Driver = new NativeDriver()) {
+  constructor(requests: RequestIterable, driver: Driver = native) {
     this.iterator = toAsyncIterable(requests);
     this.driver = driver;
   }
@@ -71,11 +79,11 @@ export default class Crawler {
    * @param req
    * @returns {Promise.<T>}
    */
-  async _fetch(req: CrawlerRequest): Promise<CrawlerUnit> {
+  private async _fetch(req: CrawlerRequest): Promise<CrawlerUnit> {
     log(`Fetching ${req.url}`);
 
     try {
-      const res = await this.driver.fetch(req);
+      const res = await this.driver(req.url, req.options);
       return {
         request: req,
         response: res

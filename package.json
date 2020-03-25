@@ -7,10 +7,10 @@
     "chalk": "^2.0.0",
     "debug": "^3.0.0",
     "indent-string": "^4.0.0",
+    "minimist": "^1.2.5",
     "strip-ansi": "^6.0.0",
     "wrap-ansi": "^6.0.0",
-    "xml": "^1.0.0",
-    "yargs": "^15.0.0"
+    "xml": "^1.0.0"
   },
   "bin": {
     "nightcrawler": "bin/nightcrawler"
@@ -24,6 +24,7 @@
     "@babel/preset-typescript": "^7.8.3",
     "@types/debug": "^4.1.5",
     "@types/jest": "^25.1.2",
+    "@types/minimist": "^1.2.0",
     "@types/node": "^13.7.2",
     "@types/tmp": "^0.1.0",
     "@types/wrap-ansi": "^3.0.0",
@@ -43,8 +44,8 @@
   "scripts": {
     "prettier": "prettier --single-quote --write './src/**/*.ts'",
     "test": "jest",
-    "check-types": "tsc",
-    "build": "babel src/ --out-dir=dist --extensions '.ts' --ignore 'src/**/__tests__/**'",
+    "check-types": "tsc --noEmit",
+    "build": "babel src/ --out-dir=dist --extensions '.ts' --ignore 'src/**/__tests__/**' --ignore 'src/**/__mocks__/**' --ignore 'src/**/__stubs__/**' && tsc --emitDeclarationOnly",
     "lint": "eslint ./src/ --ext .js,.jsx,.ts,.tsx"
   },
   "files": [

@@ -1,4 +1,3 @@
-import { CrawlerRequest } from './types';
 
 function isAsyncIterable<T = unknown>(x: unknown): x is AsyncIterable<T> {
   return (
@@ -30,10 +29,10 @@ export function toAsyncIterable<T extends unknown>(
   );
 }
 
-export function isCrawlerRequest(request: unknown): request is CrawlerRequest {
-  return (
-    request !== null &&
-    typeof request === 'object' &&
-    typeof (request as CrawlerRequest).url === 'string'
-  );
+export async function all<T>(iterator: AsyncIterable<T>): Promise<T[]> {
+  const collected = [];
+  for await (const i of iterator) {
+    collected.push(i);
+  }
+  return collected;
 }
