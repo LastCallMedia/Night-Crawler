@@ -1,4 +1,3 @@
-
 function isAsyncIterable<T = unknown>(x: unknown): x is AsyncIterable<T> {
   return (
     x !== null &&

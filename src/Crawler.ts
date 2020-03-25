@@ -9,9 +9,9 @@ import { RequestIterable, Driver, CrawlerRequest, CrawlerUnit } from './types';
 
 function isCrawlerRequest(request: unknown): request is CrawlerRequest {
   return (
-      request !== null &&
-      typeof request === 'object' &&
-      typeof (request as CrawlerRequest).url === 'string'
+    request !== null &&
+    typeof request === 'object' &&
+    typeof (request as CrawlerRequest).url === 'string'
   );
 }
 

@@ -65,10 +65,13 @@ describe('CLI', function() {
     const mockedLoadContext = mocked(loadContext);
     mockedLoadContext.mockImplementationOnce(() => ctx);
     await cli([], stdout, cwd);
-    expect(crawl).toHaveBeenCalledWith(expect.objectContaining({
-      context: ctx
-    }), expect.anything());
-  })
+    expect(crawl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: ctx
+      }),
+      expect.anything()
+    );
+  });
 
   it('Should pass default values to crawl', async function() {
     await cli([], stdout, cwd);

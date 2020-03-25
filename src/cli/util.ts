@@ -9,14 +9,15 @@ export function hasFailure(result: TestResultMap): boolean {
 }
 
 export function loadContext(configFile: string, cwd: string): TestContext {
-  let context: TestContext | undefined;
+  let resolved: string;
   try {
-    const resolved = require.resolve(configFile, { paths: [cwd] });
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    context = require(resolved);
+    resolved = require.resolve(configFile, { paths: [cwd] });
   } catch (e) {
     throw new Error(`Unable to find configuration file at ${configFile}.`);
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const context = require(resolved);
 
   if (context instanceof TestContext) {
     return context;

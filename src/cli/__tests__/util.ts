@@ -48,4 +48,10 @@ describe('loadContext', function() {
       loadContext('./nonexistent.js', cwd);
     }).toThrow('Unable to find configuration file at ./nonexistent.js.');
   });
+
+  it('Should fail when the config file is broken', function() {
+    expect(() => {
+      loadContext('./broken.js', cwd);
+    }).toThrow('Cannot find module');
+  });
 });
