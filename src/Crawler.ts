@@ -1,11 +1,19 @@
 import debug from 'debug';
 import native from './driver/native';
-import { isCrawlerRequest, toAsyncIterable } from './util';
+import { toAsyncIterable } from './util';
 
 const log = debug('nightcrawler:info');
 const error = debug('nightcrawler:error');
 
 import { RequestIterable, Driver, CrawlerRequest, CrawlerUnit } from './types';
+
+function isCrawlerRequest(request: unknown): request is CrawlerRequest {
+  return (
+      request !== null &&
+      typeof request === 'object' &&
+      typeof (request as CrawlerRequest).url === 'string'
+  );
+}
 
 export default class Crawler {
   driver: Driver;

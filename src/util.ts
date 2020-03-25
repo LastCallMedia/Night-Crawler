@@ -1,4 +1,3 @@
-import { CrawlerRequest } from './types';
 
 function isAsyncIterable<T = unknown>(x: unknown): x is AsyncIterable<T> {
   return (
@@ -27,14 +26,6 @@ export function toAsyncIterable<T extends unknown>(
   }
   throw new Error(
     'Unable to create an async iterator from the request iterable.'
-  );
-}
-
-export function isCrawlerRequest(request: unknown): request is CrawlerRequest {
-  return (
-    request !== null &&
-    typeof request === 'object' &&
-    typeof (request as CrawlerRequest).url === 'string'
   );
 }
 
