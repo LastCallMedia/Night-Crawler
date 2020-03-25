@@ -1,3 +1,11 @@
 #!/usr/bin/env node
 
-require('../dist/cli');
+const cli = require('../dist/cli').default;
+const {FailedAnalysisError} = require('../dist/cli/errors')
+cli(process.argv, process.stdout, process.cwd()).then(
+    () => process.exit(0),
+    (err) => {
+        console.error(err instanceof FailedAnalysisError ? err.message : err);
+        process.exit(1);
+    }
+)

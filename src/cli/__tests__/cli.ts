@@ -1,4 +1,4 @@
-import cli from '../cli';
+import cli from '../';
 import help from '../commands/help';
 import version from '../commands/version';
 import crawl from '../commands/crawl';
