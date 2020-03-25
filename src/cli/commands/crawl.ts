@@ -5,20 +5,20 @@ import JSONReporter from '../formatters/JSONReporter';
 import { hasFailure } from '../util';
 import Reporter from '../formatters/Reporter';
 import TestContext from '../../testing/TestContext';
+import { StdoutShape } from '../index';
 
-export type CrawlArgs = {
-  context: TestContext;
+type CommandArgv = {
   concurrency?: number;
+  silent?: boolean;
   json?: string;
   junit?: string;
-  silent?: boolean;
-  stdout?: NodeJS.WritableStream & { columns: number };
+  context: TestContext;
 };
 
-function getReporters(argv: CrawlArgs): Reporter[] {
+function getReporters(argv: CommandArgv, stdout: StdoutShape): Reporter[] {
   const reporters = [];
   if (!argv.silent) {
-    reporters.push(new ConsoleReporter(argv.stdout ?? process.stdout));
+    reporters.push(new ConsoleReporter(stdout));
   }
   if (argv.junit?.length) {
     reporters.push(new JUnitReporter(argv.junit));
@@ -28,11 +28,16 @@ function getReporters(argv: CrawlArgs): Reporter[] {
   }
   return reporters;
 }
-export const handler = async function(argv: CrawlArgs): Promise<void> {
-  const { context, concurrency = 3 } = argv;
+
+export default async function(
+  argv: CommandArgv,
+  stdout: StdoutShape
+): Promise<void> {
+  const { context, concurrency = 5 } = argv;
+  const reporters: Reporter[] = getReporters(argv, stdout);
+
   let hasAnyFailure = false;
 
-  const reporters: Reporter[] = getReporters(argv);
   await Promise.all(reporters.map(reporter => reporter.start()));
 
   for await (const [url, result] of context.crawl(concurrency)) {
@@ -45,4 +50,4 @@ export const handler = async function(argv: CrawlArgs): Promise<void> {
   if (hasAnyFailure) {
     throw new FailedAnalysisError('Testing reported an error.');
   }
-};
+}

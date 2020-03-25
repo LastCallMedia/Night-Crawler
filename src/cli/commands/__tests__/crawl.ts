@@ -1,4 +1,4 @@
-import { handler } from '../crawl';
+import handler from '../crawl';
 import stream from 'stream';
 import { FailedAnalysisError } from '../../errors';
 import TestContext from '../../../testing/TestContext';
@@ -6,9 +6,8 @@ import TestContext from '../../../testing/TestContext';
 import ConsoleReporter from '../../formatters/ConsoleReporter';
 import JUnitReporter from '../../formatters/JUnitReporter';
 import JSONReporter from '../../formatters/JSONReporter';
-
-import { mocked } from 'ts-jest/utils';
 import { makeResult } from '../../util';
+import { mocked } from 'ts-jest/utils';
 
 jest.mock('../../../testing/TestContext');
 jest.mock('../../formatters/JUnitReporter');
@@ -40,14 +39,8 @@ describe('Crawl Handler', function() {
   it('Executes the crawl', async function() {
     // eslint-disable-next-line
     const context = new TestContext('');
-    context.crawl = jest.fn(async function*(): ReturnType<
-      TestContext['crawl']
-    > {
-      // No-op.
-    });
-    const mockedContext = mocked(context);
-    await handler({ stdout, context, concurrency: 1 });
-    expect(mockedContext.crawl).toHaveBeenCalledWith(1);
+    await handler({ context, concurrency: 1 }, stdout);
+    expect(context.crawl).toHaveBeenCalledWith(1);
   });
 
   it('Displays console output.', async function() {
@@ -59,7 +52,7 @@ describe('Crawl Handler', function() {
       ];
     };
     try {
-      await handler({ stdout, context });
+      await handler({ context }, stdout);
     } catch (e) {
       // no-op - we don't care.
     }
@@ -79,7 +72,7 @@ describe('Crawl Handler', function() {
       ];
     };
     try {
-      await handler({ stdout, context, silent: true });
+      await handler({ context, silent: true }, stdout);
     } catch (e) {
       // no-op - we don't care.
     }
@@ -95,7 +88,7 @@ describe('Crawl Handler', function() {
       ];
     };
     try {
-      await handler({ stdout, context, junit: 'test.xml' });
+      await handler({ context, junit: 'test.xml' }, stdout);
     } catch (e) {
       // no-op - we don't care.
     }
@@ -115,7 +108,7 @@ describe('Crawl Handler', function() {
       ];
     };
     try {
-      await handler({ stdout, context, json: 'test.json' });
+      await handler({ context, json: 'test.json' }, stdout);
     } catch (e) {
       // no-op - we don't care.
     }
@@ -134,7 +127,7 @@ describe('Crawl Handler', function() {
         makeResult({ Testing: { pass: false, message: 'Test' } })
       ];
     };
-    await expect(handler({ stdout, context })).rejects.toBeInstanceOf(
+    await expect(handler({ context }, stdout)).rejects.toBeInstanceOf(
       FailedAnalysisError
     );
   });
@@ -144,10 +137,12 @@ describe('Crawl Handler', function() {
     context.crawl = (): ReturnType<TestContext['crawl']> => {
       throw new Error('Oh no!');
     };
-    const p = handler({
-      stdout,
-      context
-    });
+    const p = handler(
+      {
+        context
+      },
+      stdout
+    );
     return expect(p).rejects.toThrow('Oh no!');
   });
 });

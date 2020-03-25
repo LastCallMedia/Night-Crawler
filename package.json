@@ -45,7 +45,7 @@
     "prettier": "prettier --single-quote --write './src/**/*.ts'",
     "test": "jest",
     "check-types": "tsc --noEmit",
-    "build": "babel src/ --out-dir=dist --extensions '.ts' --ignore 'src/**/__tests__/**' && tsc --emitDeclarationOnly",
+    "build": "babel src/ --out-dir=dist --extensions '.ts' --ignore 'src/**/__tests__/**' --ignore 'src/**/__mocks__/**' --ignore 'src/**/__stubs__/**' && tsc --emitDeclarationOnly",
     "lint": "eslint ./src/ --ext .js,.jsx,.ts,.tsx"
   },
   "files": [
