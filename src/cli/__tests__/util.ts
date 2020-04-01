@@ -33,24 +33,24 @@ describe('hasFailure', function() {
 describe('loadContext', function() {
   const cwd = path.join(__dirname, '..', '__stubs__');
 
-  it('Should fail when context is not the default export', function() {
-    expect(loadContext('./noexport.js', cwd)).rejects.toThrow(
+  it('Should fail when context is not the default export', async function() {
+    await expect(loadContext('./noexport.js', cwd)).rejects.toThrow(
       'The configuration file at ./noexport.js does not export a valid test context.'
     );
   });
 
-  it('Should load when context is the primary export', function() {
-    expect(loadContext('./ok.js', cwd)).resolves.toBeTruthy();
+  it('Should load when context is the primary export', async function() {
+    await expect(loadContext('./ok.js', cwd)).resolves.toBeTruthy();
   });
 
-  it('Should fail when the config file does not exist', function() {
-    expect(loadContext('./nonexistent.js', cwd)).rejects.toThrow(
+  it('Should fail when the config file does not exist', async function() {
+    await expect(loadContext('./nonexistent.js', cwd)).rejects.toThrow(
       'Unable to find configuration file at ./nonexistent.js.'
     );
   });
 
-  it('Should fail when the config file is broken', function() {
-    expect(loadContext('./broken.js', cwd)).rejects.toThrow(
+  it('Should fail when the config file is broken', async function() {
+    await expect(loadContext('./broken.js', cwd)).rejects.toThrow(
       'Cannot find module'
     );
   });
