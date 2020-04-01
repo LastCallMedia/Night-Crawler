@@ -4,15 +4,21 @@ import { RequestIterable } from '../types';
 
 let activeContext: TestContext | null = null;
 
-const crawl = function(
+type CrawlCB = () =>
+  | RequestIterable
+  | Crawler
+  | Promise<RequestIterable>
+  | Promise<Crawler>;
+
+const crawl = async function(
   description: string,
-  cb: () => RequestIterable | Crawler
-): TestContext {
+  cb: CrawlCB
+): Promise<TestContext> {
   const context = new TestContext(description);
   activeContext = context;
   let result: RequestIterable | Crawler;
   try {
-    result = cb();
+    result = await cb();
     if (!result) {
       throw new Error(
         `This crawl function did not return requests. Make sure you return either an iterable containing requests, or a Crawler object.`
@@ -32,7 +38,7 @@ const withActive = <A extends unknown[], R extends unknown>(
   return function(...args: A): R {
     if (activeContext === null) {
       throw new Error(
-        `You may not call ${name} outside of a crawler function.`
+        `You may not call "${name}()" outside of a crawler function.`
       );
     }
     return cb(activeContext, ...args);

@@ -32,26 +32,24 @@ describe('loadContext', function() {
   const cwd = path.join(__dirname, '..', '__stubs__');
 
   it('Should fail when context is not the default export', function() {
-    expect(() => {
-      loadContext('./noexport.js', cwd);
-    }).toThrow(
+    expect(loadContext('./noexport.js', cwd)).rejects.toThrow(
       'The configuration file at ./noexport.js does not export a valid test context.'
     );
   });
 
   it('Should load when context is the primary export', function() {
-    expect(loadContext('./ok.js', cwd)).toBeTruthy();
+    expect(loadContext('./ok.js', cwd)).resolves.toBeTruthy();
   });
 
   it('Should fail when the config file does not exist', function() {
-    expect(() => {
-      loadContext('./nonexistent.js', cwd);
-    }).toThrow('Unable to find configuration file at ./nonexistent.js.');
+    expect(loadContext('./nonexistent.js', cwd)).rejects.toThrow(
+      'Unable to find configuration file at ./nonexistent.js.'
+    );
   });
 
   it('Should fail when the config file is broken', function() {
-    expect(() => {
-      loadContext('./broken.js', cwd);
-    }).toThrow('Cannot find module');
+    expect(loadContext('./broken.js', cwd)).rejects.toThrow(
+      'Cannot find module'
+    );
   });
 });
