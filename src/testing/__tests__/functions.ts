@@ -43,10 +43,9 @@ describe('crawl function', function() {
   });
 
   it('A crawl function should be possible to make asynchronous', async function() {
-    const asyncFn = async function() {
-      return [];
-    };
-    await expect(crawl('test', asyncFn)).resolves.toBeInstanceOf(TestContext);
+    await expect(crawl('test', async () => [])).resolves.toBeInstanceOf(
+      TestContext
+    );
   });
 
   it('Should proxy `test` calls to the context', async function() {
