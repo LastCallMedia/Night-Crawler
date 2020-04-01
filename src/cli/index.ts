@@ -52,7 +52,7 @@ export default async function(
       {
         ...argv,
         concurrency: massageConcurrency(argv.concurrency, 5),
-        context: loadContext(argv.config, cwd)
+        context: await loadContext(argv.config, cwd)
       },
       stdout
     );

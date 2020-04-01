@@ -8,7 +8,10 @@ export function hasFailure(result: TestResultMap): boolean {
   return Array.from(result.values()).some(r => !r.pass);
 }
 
-export function loadContext(configFile: string, cwd: string): TestContext {
+export async function loadContext(
+  configFile: string,
+  cwd: string
+): Promise<TestContext> {
   let resolved: string;
   try {
     resolved = require.resolve(configFile, { paths: [cwd] });
@@ -17,7 +20,7 @@ export function loadContext(configFile: string, cwd: string): TestContext {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const context = require(resolved);
+  const context = await require(resolved);
 
   if (context instanceof TestContext) {
     return context;
