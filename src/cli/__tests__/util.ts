@@ -2,6 +2,8 @@ import { TestResultMap, TestResult } from '../../testing/TestContext';
 import { hasFailure, loadContext } from '../util';
 import path from 'path';
 
+jest.mock('../../testing/TestContext');
+
 function r(obj: { [k: string]: TestResult }): TestResultMap {
   return new Map(Object.entries(obj));
 }
