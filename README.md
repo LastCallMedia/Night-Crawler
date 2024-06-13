@@ -1,7 +1,7 @@
 ![Nightcrawler](docs/logo.png)
 ============
 
-Nightcrawler is a simple NodeJS webcrawler that fetches URLs and aggregates data about the responses it receives.  It is designed to support daily metric collection and assertions about those metrics for websites.  The canonical use case is in testing a development version of a website for errors and backend response time on a nightly basis.
+Nightcrawler is brought to you by your friends at [Last Call Media](https://www.lastcallmedia.com), it is a simple NodeJS webcrawler that fetches URLs and aggregates data about the responses it receives.  It is designed to support daily metric collection and assertions about those metrics for websites.  The canonical use case is in testing a development version of a website for errors and backend response time on a nightly basis.
 
 Getting Started
 ---------------
@@ -159,4 +159,4 @@ Add the job to a workflow to have Nightcrawler run against that branch.
 
 Attribution/Thanks
 ------------------
-This project is an independent effort of Last Call Media, but it was born out of a need discovered while working on the [Mass.gov](https://www.mass.gov) project.  In particular, we'd like to thank members of the Platform Support team: Ian Sholtys for coming up with arguably the best name in software, Youssef Riahi for serving as a sounding board and a source of ideas, and Jessie Biroscak for encouraging development. See how Nightcrawler is being used by [Mass.gov](https://github.com/massgov/openmass/tree/develop/.circleci/nightcrawler).
+This project is an independent effort of [Last Call Media](https://www.lastcallmedia.com), but it was born out of a need discovered while working on the [Mass.gov](https://www.mass.gov) project.  In particular, we'd like to thank members of the Platform Support team: Ian Sholtys for coming up with arguably the best name in software, Youssef Riahi for serving as a sounding board and a source of ideas, and Jessie Biroscak for encouraging development. See how Nightcrawler is being used by [Mass.gov](https://github.com/massgov/openmass/tree/develop/.circleci/nightcrawler).
